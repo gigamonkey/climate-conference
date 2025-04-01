@@ -1,0 +1,138 @@
+.read schema.sql
+
+.mode csv
+.import --skip 1 "data/Climate Conference '25 Workshop Selection .csv" raw_prefs
+
+update raw_prefs set username = null where username = '';
+
+-- Fix some records where the username didn't get filled in (???) and the email had typos
+update raw_prefs set email = 'krisadagrenoble@students.berkeley.net' where email = 'Krisadagrenobls@students.berkeley.ney';
+update raw_prefs set email = 'jevoncooksmith@students.berkeley.net' where email = 'jevoncooksmith@students.berkeley.net)';
+update raw_prefs set email = 'justineyre@students.berkeley.net' where email = 'justineyre@students.berkeley.net ';
+update raw_prefs set email = 'gregoriocs@students.berkeley.net' where email = 'gregoriocs@berkeley.net';
+update raw_prefs set email = 'shiyareynolds@students.berkeley.net' where email = 'shiyareynolds@students.berkely.net';
+update raw_prefs set email = 'ThomasBorovicka@students.berkeley.net' where email = 'ThomasBorovicka2students.berkeley.net';
+update raw_prefs set email = 'emmanuelcamacho@students.berkeley.net' where email = 'emmauelcamacho@students.berkeley.net';
+update raw_prefs set email = 'micahfreedman@students.berkeley.net' where email = 'micahfreedman@students.berkleley.net';
+update raw_prefs set email = 'ezravalenzuela@students.berkeley.net' where email = 'Ezravalenzuela@students.berkley.net';
+update raw_prefs set email = 'menashekirsch@students.berkeley.net' where email = 'menashekirsch';
+update raw_prefs set email = 'Josiahbrown1@students.berkeley.net' where email = 'Josiahbrown1@students.berkeley';
+update raw_prefs set email = 'MossBaradThompson@students.berkeley.net' where email = 'MossBaradThompson@students.berekely.net';
+update raw_prefs set email = 'sebastiansalvatorecastillotenorio@students.berkeley.net' where email = 'sebastiansalvatorecastillotenorio';
+update raw_prefs set email = 'mateoaranguren@students.berkeley.net' where email = 'mateoaranguren@gmail.berkeley.net';
+update raw_prefs set email = 'hezkielclark@students.berkeley.net' where email = 'hezkielclark@gmail.com';
+update raw_prefs set email = 'Bryantsurrell@students.berkeley.net' where email = 'Bryantsurrell@studentss.berkeley.net';
+update raw_prefs set email = 'ellakoepsell@students.berkeley.net' where email = 'ellakoepsell@students.berekeley.net';
+
+-- Put the canonical email addresses in the email field.
+update raw_prefs set email = lower(coalesce(username, email));
+
+.import --skip 1 "data/all-students.csv" raw_students
+
+update raw_students set grade = 9 where grade = '09';
+delete from raw_students where grade <> 9 or active = 0;
+
+.import --skip 1 data/classes.csv classes
+
+insert into students
+select student_id, email, first_name, last_name, slc hive
+from raw_students where slc like 'Hive %';
+
+insert into prefs
+with ranked as (
+  select *, rank() over (partition by email order by timestamp desc) rank from raw_prefs
+)
+select
+  timestamp,
+  s.student_id,
+  email,
+  s.last_name,
+  s.first_name,
+  s.hive,
+  workshops
+from ranked
+join students s using (email)
+where rank = 1;
+
+insert into choices
+with recursive split(student_id, item, rest) AS (
+  -- Base case: take the first item and the rest
+  select
+    student_id,
+    substr(workshops, 1, instr(workshops || ';', ';') - 1),
+    substr(workshops || ';', instr(workshops || ';', ';') + 1)
+  from prefs
+
+  union all
+
+  -- Recursive case: keep splitting the rest
+  select
+    student_id,
+    substr(rest, 1, instr(rest, ';') - 1),
+    substr(rest, instr(rest, ';') + 1)
+  from split
+  where rest != ''
+)
+select student_id, item workshop, 1 submitted FROM split;
+
+
+-- The core classes - used to determine which periods we should schedule each student
+insert into core_classes(course) values('Physics 1 (P)');
+insert into core_classes(course) values('FrshSemHist (P)');
+insert into core_classes(course) values('English 1 (P)');
+insert into core_classes(course) values('Math 1 (P)');
+insert into core_classes(course) values('Advanced Math 1');
+
+-- Not participating - except students in these courses/hives
+insert into not_participating(course, hive) values ('English 1 (P)', 'Hive 7');
+insert into not_participating(course, hive) values ('FrshSemHist (P)', 'Hive 7');
+insert into not_participating(course, hive) values ('Math 1 (P)', 'Hive 4');
+insert into not_participating(course, hive) values ('Math 1 (P)', 'Hive 2');
+
+
+drop view if exists student_periods;
+create view student_periods as
+select
+  student_id,
+  course,
+  period
+from classes
+join core_classes using (course)
+join students using (student_id)
+left join not_participating using (course, hive)
+where
+  end_date = '' and
+  not_participating.course is null
+group by student_id, course;
+
+
+-- One row per choice per student with only choices that fit their periods for
+-- single-period workshops and one row for each multi-period choices.
+drop view if exists all_choices;
+create view all_choices as
+with
+  multiperiod as (select * from workshops where duration > 1),
+  single_period as (select * from workshops where duration = 1)
+
+select
+  email,
+  period,
+  duration,
+  workshop
+from choices
+join student_periods using (student_id)
+join students using (student_id)
+join single_period using (period, workshop)
+
+union all
+
+select
+  email,
+  period,
+  duration,
+  workshop
+from choices
+join students using (student_id)
+join multiperiod using (workshop)
+
+order by email, period, workshop;
