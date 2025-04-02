@@ -40,14 +40,13 @@ class GA {
   }
 
   withFitness(population) {
-    console.log(`Scoring population of ${population.length} critters.`);
+    //console.log(`Scoring population of ${population.length} critters.`);
     return population.map((c) => ({ dna: c, fitness: this.problem.fitness(c) }));
   }
 
   run(populationSize, maxGenerations) {
     console.log('Making initial population.');
     const population = this.withFitness(this.randomPopulation(populationSize));
-
     console.log('Starting generations.');
     this.runFromPopulation(population, maxGenerations);
   }

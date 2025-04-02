@@ -1,14 +1,16 @@
-#!/usr/bin/env node
+#!/usr/bin/env node --max_old_space_size=16384
 
 import { dumpJSON, saveJSON } from './file-util.js';
 import { DB } from 'pugsql';
 import { argv } from 'process';
 import { mapValues } from './util.js';
-import { WorkshopAssignment, countAssignments } from './workshop-assignment.js';
+import { WorkshopAssignment } from './workshop-assignment.js';
 import { GA, fittest } from './ga.js';
 import { mkdirSync, writeFileSync } from 'fs';
 
 const { groupBy, entries, fromEntries } = Object;
+
+const mutationRate = 0.05;
 
 const except = (property) => {
   return (obj) => {
@@ -17,19 +19,40 @@ const except = (property) => {
   };
 };
 
+// FIXME: not clear this actually does anything.
+const internWorkshopNames = true;
+
+const interned = new Map();
+
+const intern = (s) => {
+  if (internWorkshopNames) {
+    if (!interned.has(s)) {
+      interned.set(s, s);
+    }
+    return interned.get(s);
+  } else {
+    return s;
+  }
+};
+
 const db = new DB(argv[2]).addQueries('queries.sql');
 
 const popSize = Number(argv[3]);
 const generations = Number(argv[4]);
 
-// Map of workshop name to limits dicts
-const limits = fromEntries(db.limits().map(({workshop, ...limits}) => [ workshop, limits ]));
+// Map of workshop names to limits dicts
+const limits = fromEntries(db.limits().map(({workshop, ...limits}) => [ intern(workshop), limits ]));
 
-// Map of student email to periods that need to be assigned
+// Map of student emails to periods that need to be assigned
 const periods = mapValues(groupBy(db.periods(), row => row.email), xs => xs.map(x => x.period));
 
 // Map of student email to choices as (period, duration, workshop) objects.
-const studentChoices = mapValues(groupBy(db.possibilities(), row => row.email), xs => xs.map(({email, ...rest}) => rest));
+const studentChoices = mapValues(groupBy(db.possibilities(), row => row.email), (choices) => {
+  return choices.map(({ email, ...rest }) => {
+    rest.workshop = intern(rest.workshop);
+    return rest;
+  });
+});
 
 const students = mapValues(studentChoices, (choices, email) => {
   return {
@@ -41,6 +64,8 @@ const students = mapValues(studentChoices, (choices, email) => {
 
 const start = new Date().toISOString();
 
+const wa = new WorkshopAssignment(limits, students, mutationRate);
+
 const logger = async (g, pop) => {
   const best = fittest(pop);
   console.log(`Generation ${g} - best: ${best.fitness}`);
@@ -48,12 +73,15 @@ const logger = async (g, pop) => {
   writeFileSync(
     `runs/${start}/g${g}-${popSize}x${generations}.json`,
     JSON.stringify({
+      config: {
+        g,
+        popSize,
+        mutationRate,
+      },
       ...best,
-      stats: countAssignments(best.dna, limits),
+      stats: wa.stats(best.dna),
     }, null, 2));
 };
-
-const wa = new WorkshopAssignment(limits, students, 0.01);
 
 const ga = new GA(wa, logger);
 
