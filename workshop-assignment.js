@@ -68,10 +68,12 @@ class WorkshopAssignment {
  * Make a fresh random assignment of choices for a given student.
  */
 const randomAssignment = (student) => {
-  return {
+  const x = {
     email: student.email,
     periods: randomlyFillPeriods({}, student),
   };
+  if (!x.periods) throw new Error(`Can't make assignment for ${JSON.stringify(student, null, 2)}`);
+  return x;
 };
 
 const randomlyFillPeriods = (assigned, { choices, periods }) => {
@@ -152,5 +154,4 @@ const constraints = (assignments) => 0.1 ** sum(assignments.map(scoreWorkshop));
 // How far away from the ideal number of students is a given assignment.
 const scoreWorkshop = ({assigned, ideal}) => abs(assigned - ideal) / ideal;
 
-
-export { WorkshopAssignment };
+export { WorkshopAssignment, countAssignments };

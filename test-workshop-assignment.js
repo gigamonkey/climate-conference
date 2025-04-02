@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
-import { dumpJSON } from './file-util.js';
+import { dumpJSON, saveJSON } from './file-util.js';
 import { DB } from 'pugsql';
 import { argv } from 'process';
 import { mapValues } from './util.js';
-import { WorkshopAssignment } from './workshop-assignment.js';
+import { WorkshopAssignment, countAssignments } from './workshop-assignment.js';
 import { GA, fittest } from './ga.js';
+import { mkdirSync, writeFileSync } from 'fs';
 
 const { groupBy, entries, fromEntries } = Object;
 
@@ -38,8 +39,18 @@ const students = mapValues(studentChoices, (choices, email) => {
   };
 });
 
-const logger = (g, pop) => {
-  console.log(`Generation ${g} - best: ${fittest(pop).fitness}`);
+const start = new Date().toISOString();
+
+const logger = async (g, pop) => {
+  const best = fittest(pop);
+  console.log(`Generation ${g} - best: ${best.fitness}`);
+  mkdirSync(`runs/${start}/`, { recursive: true });
+  writeFileSync(
+    `runs/${start}/g${g}-${popSize}x${generations}.json`,
+    JSON.stringify({
+      ...best,
+      stats: countAssignments(best.dna, limits),
+    }, null, 2));
 };
 
 const wa = new WorkshopAssignment(limits, students, 0.01);
@@ -47,12 +58,3 @@ const wa = new WorkshopAssignment(limits, students, 0.01);
 const ga = new GA(wa, logger);
 
 ga.run(popSize, generations);
-
-// const p1 = wa.randomDNA();
-// const p2 = wa.randomDNA();
-
-// //wa.foo(p1);
-
-// console.log(wa.fitness(p1));
-// console.log(wa.fitness(p2));
-// console.log(wa.fitness(wa.cross(p1, p2)));

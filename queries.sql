@@ -12,3 +12,6 @@ select student_id, 10 - count(*) extra from choices group by student_id having c
 
 -- :name limits :all
 select distinct workshop, minimum, ideal, maximum from workshops;
+
+-- :name toSchedule :list
+select distinct student_id studentId from students;
