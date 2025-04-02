@@ -17,12 +17,14 @@ const workshops = new Set(db.workshopNames());
 const choices = mapValues(groupBy(db.choices(), row => row.student_id), xs => new Set(xs.map(({workshop, ...x}) => workshop)));
 
 const randomChoices = (workshops, chosen) => {
-  return sample([...workshops.difference(chosen)], 10 - chosen.length);
+  return sample([...workshops.difference(chosen)], 10 - chosen.size);
 };
 
-entries(choices).forEach(([studentId, chosen]) => {
-  if (chosen.length < 10) {
+db.toSchedule().forEach(studentId => {
+  const chosen = choices[studentId] || new Set();
+  if (chosen.size < 10) {
     const extra = randomChoices(workshops, chosen);
+    //console.log(`Padding ${studentId} with ${JSON.stringify(extra)}`);
     extra.forEach(workshop => {
       db.insertChoice({ studentId, workshop, submitted: 0 });
     });
