@@ -2,6 +2,8 @@ const sum = (ns) => ns.reduce((s, n) => s + n, 0);
 
 const count = (xs, fn) => xs.reduce((c, x) => c + (fn(x) ? 1 : 0), 0);
 
+const variance = (ns) => sum(ns.map(n => n * n))
+
 const num = (n) => {
   if (n % 1 === 0) {
     return n.toString();
@@ -71,4 +73,4 @@ const maximum = (xs, key) => {
   return best;
 }
 
-export { flattenKeys, unflattenKeys, mapValues, sum, count, num, maximum };
+export { flattenKeys, unflattenKeys, mapValues, sum, count, num, maximum, variance };
