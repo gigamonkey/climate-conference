@@ -66,8 +66,7 @@ const start = new Date().toISOString();
 
 const wa = new WorkshopAssignment(limits, students, mutationRate);
 
-const logger = async (g, pop) => {
-  const best = fittest(pop);
+const logger = async (g, pop, best) => {
   console.log(`Generation ${g} - best: ${best.fitness}`);
   mkdirSync(`runs/${start}/`, { recursive: true });
   writeFileSync(

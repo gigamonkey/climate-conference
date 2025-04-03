@@ -1,7 +1,7 @@
 import { dumpJSON } from './file-util.js';
 import { fitnessWeighted, fittest } from './ga.js';
 import { p, choose, shuffled } from './random.js';
-import { sum } from './util.js';
+import { variance } from './util.js';
 
 const { abs, floor, min, max, random } = Math;
 const { entries, keys, values } = Object;
@@ -71,9 +71,7 @@ class WorkshopAssignment {
       const mutated = structuredClone(gene);
       const replacement = choose(student.choices);
 
-      if (replacement.duration == 1) {
-        clearWorkshop(mutated.periods, mutated.periods[replacement.period]);
-      }
+      clearWorkshop(mutated.periods, mutated.periods[replacement.period]);
       assignChoice(mutated.periods, replacement);
       mutated.periods = randomlyFillPeriods(mutated.periods, student);
 
@@ -96,9 +94,7 @@ class WorkshopAssignment {
   countAssignments(dna) {
     return entries(this.stats(dna)).flatMap(([workshop, { limits, periods }]) => {
       return entries(periods).map(([period, assigned]) => {
-        const name = `${workshop} - P${period}`;
-        const ideal = limits.ideal;
-        return { name, assigned, ideal };
+        return { assigned, limits };
       });
     });
   }
@@ -133,67 +129,78 @@ const randomAssignment = (student) => {
   return x;
 };
 
-const randomlyFillPeriods = (assignedPeriods, { choices, periods }) => {
+const randomlyFillPeriods = (assigned, { choices, periods }) => {
 
-  const workshops = new Set(values(assignedPeriods));
-
-  const usable = choices.filter(c => {
-    for (let i = 0; i < c.duration; i++) {
-      if (c.period + i in assignedPeriods) return false;
-    }
-    return !workshops.has(c.workshop);
-  });
-
-  const done = (x) => periods.every(p => p in x);
-
-  const incompatible = (c, choice) => {
-    return (
-      choice.workshop === c.workshop || overlap(range(c), range(choice))
-    );
-  }
-
-  const eliminate = (c, cs) => cs.filter(x => !incompatible(c, x));
-
-  const loop = (ap, left) => {
-    if (done(ap)) {
+  // Recursively fill empty slots with backtracking if we get into a situation
+  // where none of the remaining choices can fill an empty period.
+  const fill = (ap, left) => {
+    if (periods.every(p => p in ap)) {
       return ap;
     } else if (left.length === 0) {
       return false;
     } else {
       const c = left[0];
       return (
-        loop(assignChoice({...ap}, c), eliminate(c, left)) || loop(ap, left.slice(1))
+        fill(assignChoice({...ap}, c), eliminate(c, left)) || fill(ap, left.slice(1))
       );
     }
   };
 
-  return loop(assignedPeriods, shuffled(usable));
+  return fill(assigned, shuffled(usableChoices(choices, assigned)));
 };
+
+const usableChoices = (choices, assigned) => {
+  const assignedWorkshops = new Set(values(assigned));
+  return choices.filter(c => usableChoice(c, assigned, assignedWorkshops));
+};
+
+const usableChoice = (choice, assigned, assignedWorkshops) => {
+  const { period, duration, workshop } = choice;
+  for (let i = 0; i < duration; i++) {
+    if (period + i in assigned) return false;
+  }
+  return !assignedWorkshops.has(workshop);
+};
+
+const eliminate = (c, cs) => cs.filter(x => !incompatible(c, x));
+
+const incompatible = (c1, c2) => c1.workshop === c2.workshop || overlap(range(c1), range(c2));
 
 const overlap = ([a, b], [c, d]) => max(a, c) <= min(b, d);
 
 const range = ({ period, duration }) => [period, period + duration - 1];
 
-const clearWorkshop = (assignedPeriods, workshop) => {
-  entries(assignedPeriods)
+const clearWorkshop = (assigned, workshop) => {
+  entries(assigned)
     .filter(([p, w]) => w === workshop)
     .map((([p, w]) => p))
-    .forEach(p => { delete assignedPeriods[p]; });
+    .forEach(p => { delete assigned[p]; });
 };
 
-const assignChoice = (assignedPeriods, { period, duration, workshop }) => {
+const assignChoice = (assigned, { period, duration, workshop }) => {
   for (let i = 0; i < duration; i++) {
-    assignedPeriods[period + i] = workshop;
+    assigned[period + i] = workshop;
   };
-  return assignedPeriods;
+  return assigned;
 };
-
-
 
 // Combined score for all assignments to workshops.
-const constraints = (assignments) => 0.1 ** sum(assignments.map(scoreWorkshop));
+const constraints = (assignments) => 0.1 ** variance(assignments.map(scoreWorkshop));
 
 // How far away from the ideal number of students is a given assignment.
-const scoreWorkshop = ({assigned, ideal}) => abs(assigned - ideal) / ideal;
+const scoreWorkshop = ({assigned, limits }) => {
+  const { ideal, minimum, maximum } = limits;
+
+  // distance from ideal;
+  let score = abs(assigned - ideal) / ideal;
+
+  // Penalty for being below minimum
+  score += 5 * (assigned < minimum ? abs(assigned - minimum) / ideal : 0)
+
+  // Penalty for being above maximum
+  score += 5 * (assigned > maximum ? abs(assigned - maximum) / ideal : 0);
+
+  return score;
+};
 
 export { WorkshopAssignment };

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-// Insert into the database random workshop choices until every student has 10.
+// Insert into the database random single-period workshop choices until every
+// student has 10.
 
 import { DB } from 'pugsql';
 import { argv } from 'process';
@@ -24,7 +25,6 @@ db.toSchedule().forEach(studentId => {
   const chosen = choices[studentId] || new Set();
   if (chosen.size < 10) {
     const extra = randomChoices(workshops, chosen);
-    //console.log(`Padding ${studentId} with ${JSON.stringify(extra)}`);
     extra.forEach(workshop => {
       db.insertChoice({ studentId, workshop, submitted: 0 });
     });

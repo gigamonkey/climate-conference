@@ -60,14 +60,20 @@ class GA {
   }
 
   runFromPopulation(initialPopulation, maxGenerations) {
+
     let population = initialPopulation;
-    for (let g = 0; g < maxGenerations; g++) {
-      population.sort((a, b) => b.fitness - a.fitness);
-      this.logger(g, population);
-      if (this.isDone(population[0])) break;
+    let best = fittest(initialPopulation);
+
+    this.logger(0, initialPopulation, best);
+
+    for (let g = 1; g <= maxGenerations && !this.isDone(best); g++) {
       population = this.withFitness(this.problem.nextGeneration(population, population.length));
+      best = fittest(population);
+      this.logger(g, population, best);
     }
-    this.logger(maxGenerations, population);
+    if (this.isDone(best)) {
+      console.log('Found perfect solution!');
+    }
   }
 
   summarize(generation, scored) {
