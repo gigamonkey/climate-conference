@@ -2,6 +2,7 @@
 
 set -euo pipefail
 
-f=$(ls -t runs/*/* | head -1) || true
+d=$(ls -td runs/* | head -1) || true
+f=$(ls -t "$d"/* | head -1) || true
 echo "$f"
 ./show-periods.js "$f"
