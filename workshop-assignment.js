@@ -1,6 +1,6 @@
 import { dumpJSON } from './file-util.js';
-import { fitnessWeighted, fittest } from './ga.js';
-import { p, choose, shuffled } from './random.js';
+import { fitnessWeighted, fittest, topN } from './ga.js';
+import { p, choose, randomizer, shuffled } from './random.js';
 import { variance } from './util.js';
 
 const { abs, floor, min, max, random } = Math;
@@ -83,11 +83,36 @@ class WorkshopAssignment {
     return gene;
   }
 
-  nextGeneration(population) {
+  nextGenerationOLD(population) {
     const parents = fitnessWeighted(population, population.length);
     const baby = () => this.cross(choose(parents).dna, choose(parents).dna);
     const next = Array(population.length - 1).fill().map(baby);
     next.push(fittest(population).dna);
+    return next;
+  }
+
+  nextGenerationR(population) {
+    const nextP = randomizer(population, 'fitness');
+    const baby = () => this.cross(nextP().dna, nextP().dna);
+    const next = Array(population.length - 1).fill().map(baby);
+    next.push(fittest(population).dna);
+    return next;
+  }
+
+  nextGenerationHalf(population) {
+    const parents = topN(population, population.length * 2);
+    const baby = () => this.cross(choose(parents).dna, choose(parents).dna);
+    const next = Array(population.length - 1).fill().map(baby);
+    next.push(fittest(population).dna);
+    return next;
+  }
+
+  // No crossing; just mutate the best organism
+  nextGeneration(population) {
+    const best = fittest(population);
+    const baby = () => best.dna.map(g => this.maybeMutate2(g))
+    const next = Array(population.length - 1).fill().map(baby);
+    next.push(best.dna);
     return next;
   }
 
