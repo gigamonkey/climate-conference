@@ -62,17 +62,31 @@ class WorkshopAssignment {
       // mutation scheme does not. However that does mean that if we pick a
       // single-period workshop to assign it might fill just one period of an
       // already-assigned multi-period workshop. So we actually pick the
-      // replacement and if it is duration 1 we clear all the periods covered by
-      // the current occupant of the new choice's period. Then assign the new
-      // choice and then randomly fill periods to fill in any other empty
-      // periods.
+      // replacement and then clear all the periods covered by the current
+      // occupant of the new choice's period. Then assign the new choice and
+      // then randomly fill periods to fill in any other empty periods.
 
       const student = this.students[gene.email];
       const mutated = structuredClone(gene);
-      const replacement = choose(student.choices);
+      const assigned = new Set(values(gene.periods));
+      const notAssigned = student.choices.filter(({workshop}) => !assigned.has(workshop));
+      const replacement = choose(notAssigned);
 
-      clearWorkshop(mutated.periods, mutated.periods[replacement.period]);
+      for (let i = 0; i < replacement.duration; i++) {
+        clearWorkshop(mutated.periods, gene.periods[replacement.period + i]);
+      }
+      check(mutated.periods)
       assignChoice(mutated.periods, replacement);
+      try {
+        check(mutated.periods)
+      } catch {
+        console.log(`Chose ${JSON.stringify(replacement)} from ${JSON.stringify(student.choices)} with already assigned ${JSON.stringify(values(gene.periods))}`);
+        console.log(`Should have cleared`);
+        for (let i = 0; i < replacement.duration; i++) {
+          console.log(gene[replacement.period + i]);
+        }
+        throw new Error(`Error after assigning ${JSON.stringify(replacement)}: ${JSON.stringify(mutated.periods, null, 2)}`);
+      }
       mutated.periods = randomlyFillPeriods(mutated.periods, student);
 
       // Possibly we couldn't fill in the remaining slots?
@@ -171,7 +185,20 @@ const randomlyFillPeriods = (assigned, { choices, periods }) => {
     }
   };
 
-  return fill(assigned, shuffled(usableChoices(choices, assigned)));
+  const result = fill(assigned, shuffled(usableChoices(choices, assigned)));
+  return check(result);
+};
+
+const check = (r) => {
+  if (r[1] === "Field Trip: Alameda County Landfill") {
+    if (r[2] !== r[1] || r[3] !== r[1]) throw new Error("Split multiperiod.");
+  }
+
+  if ([1,2,3,4,5,6].every(p => r[p] && r[p] === r[1])) {
+    throw new Error(`All periods the same: ${JSON.stringify(r)}`);
+  }
+
+  return r;
 };
 
 const usableChoices = (choices, assigned) => {
@@ -210,7 +237,7 @@ const assignChoice = (assigned, { period, duration, workshop }) => {
 };
 
 // Combined score for all assignments to workshops.
-const constraints = (assignments) => 0.1 ** variance(assignments.map(scoreWorkshop));
+const constraints = (assignments) => 0.5 ** variance(assignments.map(scoreWorkshop));
 
 // How far away from the ideal number of students is a given assignment.
 const scoreWorkshop = ({assigned, limits }) => {
