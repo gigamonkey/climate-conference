@@ -10,7 +10,7 @@ import { mkdirSync, writeFileSync } from 'fs';
 
 const { groupBy, entries, fromEntries } = Object;
 
-const mutationRate = 0.05;
+const mutationRate = 0.005;
 
 const except = (property) => {
   return (obj) => {
