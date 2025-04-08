@@ -75,6 +75,11 @@ class WorkshopAssignment {
       for (let i = 0; i < replacement.duration; i++) {
         clearWorkshop(mutated.periods, gene.periods[replacement.period + i]);
       }
+
+      if (isFieldTrip(replacement.workshop)) {
+        values(mutated.periods).filter(isFieldTrip).forEach(w => clearWorkshop(mutated.periods, w));
+      }
+
       check(mutated.periods)
       assignChoice(mutated.periods, replacement);
       try {
@@ -185,8 +190,7 @@ const randomlyFillPeriods = (assigned, { choices, periods }) => {
     }
   };
 
-  const result = fill(assigned, shuffled(usableChoices(choices, assigned)));
-  return check(result);
+  return check(fill(assigned, shuffled(usableChoices(choices, assigned))));
 };
 
 const check = (r) => {
@@ -198,25 +202,45 @@ const check = (r) => {
     throw new Error(`All periods the same: ${JSON.stringify(r)}`);
   }
 
+  if ([1,2,3,4,5,6].every(p => r[p] && isFieldTrip(r[p]))) {
+    throw new Error(`All periods are field trip: ${JSON.stringify(r)}`);
+  }
+
   return r;
 };
 
 const usableChoices = (choices, assigned) => {
-  const assignedWorkshops = new Set(values(assigned));
-  return choices.filter(c => usableChoice(c, assigned, assignedWorkshops));
+  const workshops = values(assigned);
+  const hasFieldTrip = workshops.some(isFieldTrip)
+  const assignedWorkshops = new Set(workshops);
+  return choices.filter(c => usableChoice(c, assigned, assignedWorkshops, hasFieldTrip));
 };
 
-const usableChoice = (choice, assigned, assignedWorkshops) => {
+const usableChoice = (choice, assigned, assignedWorkshops, hasFieldTrip) => {
+
   const { period, duration, workshop } = choice;
+
+  // Choice is a field trip and we already have one.
+  if (hasFieldTrip && isFieldTrip(workshop)) {
+    return false;
+  }
+
+  // Choice's periods already assigned.
   for (let i = 0; i < duration; i++) {
     if (period + i in assigned) return false;
   }
+
+  // Same workshop already assigned in a different period.
   return !assignedWorkshops.has(workshop);
 };
 
 const eliminate = (c, cs) => cs.filter(x => !incompatible(c, x));
 
-const incompatible = (c1, c2) => c1.workshop === c2.workshop || overlap(range(c1), range(c2));
+const isFieldTrip = (w) => w.startsWith("Field Trip");
+
+const incompatible = (c1, c2) => {
+  return c1.workshop === c2.workshop || overlap(range(c1), range(c2)) || (isFieldTrip(c1.workshop) && isFieldTrip(c2.workshop));
+};
 
 const overlap = ([a, b], [c, d]) => max(a, c) <= min(b, d);
 
