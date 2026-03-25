@@ -1,5 +1,6 @@
+*.tsv
+.claude
 data/
 db.db*
 node_modules/
 runs/
-*.tsv
