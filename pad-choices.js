@@ -24,7 +24,7 @@ const randomChoices = (workshops, chosen) => {
 db.toSchedule().forEach(studentId => {
   const chosen = choices[studentId] || new Set();
   if (chosen.size < 10) {
-    const extra = randomChoices(workshops, chosen);
+    const extra = chosen.size > 0 ? randomChoices(workshops, chosen) : workshops;
     extra.forEach(workshop => {
       db.insertChoice({ studentId, workshop, submitted: 0 });
     });

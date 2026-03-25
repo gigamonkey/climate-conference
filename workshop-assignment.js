@@ -72,10 +72,17 @@ class WorkshopAssignment {
       const notAssigned = student.choices.filter(({workshop}) => !assigned.has(workshop));
       const replacement = choose(notAssigned);
 
+      // Clear all the workshops that occupy periods the replacement needs to be
+      // in. This may also clear periods that the replacement will not occupy;
+      // those will be randomly refilled.
       for (let i = 0; i < replacement.duration; i++) {
         clearWorkshop(mutated.periods, gene.periods[replacement.period + i]);
       }
 
+      // I think this is just because we prefer students to not be assigned to
+      // two field trips. So if the replacement we're adding is a field trip we
+      // remove any other field trips. Though they could be randomly put back.
+      // Or maybe I'm misremembering what this code is for.
       if (isFieldTrip(replacement.workshop)) {
         values(mutated.periods).filter(isFieldTrip).forEach(w => clearWorkshop(mutated.periods, w));
       }

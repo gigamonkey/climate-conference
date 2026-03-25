@@ -108,7 +108,7 @@ const algorithmR_iter = (xs, k) => {
 
 
 /*
- * More efficient reservoir sample that generates fewier random numbers. This
+ * More efficient reservoir sample that generates fewer random numbers. This
  * version is for when xs is an array so we can index into it directly rather
  * than having to iterate to get to the next item.
  */

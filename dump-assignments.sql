@@ -2,7 +2,6 @@
 .mode tabs
 
 select
-  student_id,
   last_name,
   first_name,
   hive,
