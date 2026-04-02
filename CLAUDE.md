@@ -16,8 +16,8 @@ sheets.
 ## Data Directory
 
 All student data lives outside the project directory. Set `DATA_DIR` to the
-directory containing `data/` (the CSVs). The database (`db.db`) and run
-outputs (`runs/`) are also created there.
+directory containing the CSVs. The database (`db.db`) and run outputs
+(`runs/`) are also created there.
 
 ```bash
 source .env       # Sets DATA_DIR and NODE_OPTIONS
@@ -51,7 +51,7 @@ Results go to `$DATA_DIR/runs/<timestamp>/` as JSON files per generation.
 - `load-workshops.js` — Loads workshop definitions from CSV into DB
 - `pad-choices.js` — Fills student choices with random workshops for uncovered periods
 - `show-assignments.js` — Display assignments as TSV
-- `$DATA_DIR/data/` — Input CSVs (student preferences, roster, schedules, workshops)
+- `$DATA_DIR/` — Input CSVs (student preferences, roster, schedules, workshops)
 
 ## Data Flow
 

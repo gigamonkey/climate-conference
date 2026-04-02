@@ -10,7 +10,7 @@ schedule availability, workshop capacity, and preference satisfaction.
 ```bash
 npm install
 
-# Set DATA_DIR to the directory containing data/ (the input CSVs).
+# Set DATA_DIR to the directory containing the input CSVs.
 # The database and run outputs will also be created there.
 # Edit .env to set the path, then source it:
 source .env
@@ -58,7 +58,7 @@ pad-choices.js          Pads student choices to 10 with random workshops
 show-assignments.js     Display assignments as TSV
 dump-assignments.js     Export assignments from DB as JSON
 show-deltas.js          Compare two assignment versions
-$DATA_DIR/data/         Input CSV files (outside project directory)
+$DATA_DIR/              Input CSV files (outside project directory)
 $DATA_DIR/runs/         Output directory (timestamped GA results)
 $DATA_DIR/db.db         SQLite database (built by make)
 app-script/             Google Apps Script for generating documents
@@ -143,8 +143,8 @@ workshop hit its ideal enrollment exactly.
 
 Environment (set in `.env`, then `source .env`):
 
-- **`DATA_DIR`**: Path to directory containing `data/` CSVs. The database and
-  run outputs are also written here. Required by both `make` and `run.js`.
+- **`DATA_DIR`**: Path to directory containing the input CSVs. The database
+  and run outputs are also written here. Required by both `make` and `run.js`.
 - **`NODE_OPTIONS`**: `--max_old_space_size=16384` (16 GB heap)
 
 Key parameters in `run.js`:
