@@ -1,28 +1,14 @@
 drop table if exists raw_prefs;
-create table raw_prefs (
-  timestamp,
-  username,
-  total_score,
-  last_name,
-  last_name_score,
-  last_name_feedback,
-  first_name,
-  first_name_score,
-  first_name_feedback,
-  email,
-  email_score,
-  email_feedback,
-  student_id,
-  student_id_score,
-  student_id_feedback,
-  hive,
-  hive_score,
-  hive_feedback,
-  workshops,
-  workshopsscore,
-  workshops_feedback
+create table if not exists raw_prefs (
+  timestamp TEXT,
+  username TEXT,
+  last_name TEXT,
+  first_name TEXT,
+  email TEXT,
+  student_id TEXT,
+  hive TEXT,
+  workshops TEXT
 );
-
 
 drop table if exists raw_students;
 create table raw_students(
