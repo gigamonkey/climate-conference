@@ -10,14 +10,20 @@ schedule availability, workshop capacity, and preference satisfaction.
 ```bash
 npm install
 
+# Set DATA_DIR to the directory containing data/ (the input CSVs).
+# The database and run outputs will also be created there.
+# Edit .env to set the path, then source it:
+source .env
+
 # Build the SQLite database from CSV data
 make all
 
 # Run the genetic algorithm (population size, generations)
-./run.js db.db 1000 500
+./run.js $DATA_DIR/db.db 1000 500
 ```
 
-Results are written to `runs/<timestamp>/` as JSON files, one per generation.
+Results are written to `$DATA_DIR/runs/<timestamp>/` as JSON files, one per
+generation.
 
 ## How It Works
 
@@ -46,21 +52,22 @@ ga.js                   Generic genetic algorithm framework
 workshop-assignment.js  Problem definition (fitness, mutation, constraints)
 queries.sql             PugSQL named queries used by run.js
 schema.sql              Database table definitions
-load.sql                Data import and transformation (CSV -> tables)
+load.sql.in             Data import template (CSV -> tables; Makefile generates load.sql)
 load-workshops.js       Loads workshop CSVs into the workshops table
 pad-choices.js          Pads student choices to 10 with random workshops
 show-assignments.js     Display assignments as TSV
 dump-assignments.js     Export assignments from DB as JSON
 show-deltas.js          Compare two assignment versions
-data/                   Input CSV files
-runs/                   Output directory (timestamped GA results)
+$DATA_DIR/data/         Input CSV files (outside project directory)
+$DATA_DIR/runs/         Output directory (timestamped GA results)
+$DATA_DIR/db.db         SQLite database (built by make)
 app-script/             Google Apps Script for generating documents
 ```
 
 ## Database Schema
 
-The database (`db.db`) is built from scratch by `make all`. There are no
-migrations; `make clean && make all` rebuilds everything.
+The database (`$DATA_DIR/db.db`) is built from scratch by `make all`. There are
+no migrations; `make clean && make all` rebuilds everything.
 
 ### Tables
 
@@ -134,8 +141,13 @@ workshop hit its ideal enrollment exactly.
 
 ## Configuration
 
+Environment (set in `.env`, then `source .env`):
+
+- **`DATA_DIR`**: Path to directory containing `data/` CSVs. The database and
+  run outputs are also written here. Required by both `make` and `run.js`.
+- **`NODE_OPTIONS`**: `--max_old_space_size=16384` (16 GB heap)
+
 Key parameters in `run.js`:
 
 - **Population size** and **generations**: passed as CLI arguments
 - **Mutation rate**: `0.005` (hardcoded in `run.js`)
-- **Heap size**: `--max_old_space_size=16384` in the shebang line (16 GB)

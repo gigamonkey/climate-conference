@@ -10,6 +10,12 @@ import { mkdirSync, writeFileSync } from 'fs';
 
 const { groupBy, entries, fromEntries } = Object;
 
+const dataDir = process.env.DATA_DIR;
+if (!dataDir) {
+  console.error('DATA_DIR environment variable is not set.');
+  process.exit(1);
+}
+
 const mutationRate = 0.005;
 
 const except = (property) => {
@@ -68,9 +74,9 @@ const wa = new WorkshopAssignment(limits, students, mutationRate);
 
 const logger = async (g, pop, best) => {
   console.log(`Generation ${g} - best: ${best.fitness}`);
-  mkdirSync(`runs/${start}/`, { recursive: true });
+  mkdirSync(`${dataDir}/runs/${start}/`, { recursive: true });
   writeFileSync(
-    `runs/${start}/g${g}-${popSize}x${generations}.json`,
+    `${dataDir}/runs/${start}/g${g}-${popSize}x${generations}.json`,
     JSON.stringify({
       config: {
         g,

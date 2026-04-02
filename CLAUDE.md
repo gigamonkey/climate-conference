@@ -13,21 +13,33 @@ sheets.
 - Node.js (ES modules), SQLite3 (`better-sqlite3`), PugSQL for named queries
 - Google Apps Script (in `app-script/`, managed with `hug` CLI)
 
+## Data Directory
+
+All student data lives outside the project directory. Set `DATA_DIR` to the
+directory containing `data/` (the CSVs). The database (`db.db`) and run
+outputs (`runs/`) are also created there.
+
+```bash
+source .env       # Sets DATA_DIR and NODE_OPTIONS
+```
+
 ## Build and Run
 
 ```bash
+source .env
+
 # Build the database from CSV data
-make all          # Creates db.db from schema.sql, load.sql, CSV files
+make all          # Creates $DATA_DIR/db.db
 
 # Run the genetic algorithm
-./run.js db.db <population-size> <generations>
-# e.g. ./run.js db.db 1000 500
+./run.js $DATA_DIR/db.db <population-size> <generations>
+# e.g. ./run.js $DATA_DIR/db.db 1000 500
 
 # Reset
-make clean        # Removes db.db and pugly.sql
+make clean        # Removes $DATA_DIR/db.db and generated files
 ```
 
-Results go to `runs/<timestamp>/` as JSON files per generation.
+Results go to `$DATA_DIR/runs/<timestamp>/` as JSON files per generation.
 
 ## Key Files
 
@@ -35,11 +47,11 @@ Results go to `runs/<timestamp>/` as JSON files per generation.
 - `ga.js` — Generic genetic algorithm framework
 - `workshop-assignment.js` — Problem definition (fitness, mutation, crossover)
 - `queries.sql` — PugSQL named queries (limits, periods, possibilities)
-- `schema.sql` / `load.sql` — Database schema and data loading
+- `schema.sql` / `load.sql.in` — Database schema and data loading template
 - `load-workshops.js` — Loads workshop definitions from CSV into DB
 - `pad-choices.js` — Fills student choices with random workshops for uncovered periods
 - `show-assignments.js` — Display assignments as TSV
-- `data/` — Input CSVs (student preferences, roster, schedules, workshops)
+- `$DATA_DIR/data/` — Input CSVs (student preferences, roster, schedules, workshops)
 
 ## Data Flow
 

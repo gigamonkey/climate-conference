@@ -1,7 +1,7 @@
 .read schema.sql
 
 .mode csv
-.import --skip 1 "data/Climate Conference '25 Workshop Selection .csv" raw_prefs
+.import --skip 1 "__DATA_DIR__/data/Climate Conference '25 Workshop Selection .csv" raw_prefs
 
 update raw_prefs set username = null where username = '';
 
@@ -27,12 +27,12 @@ update raw_prefs set email = 'ellakoepsell@students.berkeley.net' where email = 
 -- Put the canonical email addresses in the email field.
 update raw_prefs set email = lower(coalesce(username, email));
 
-.import --skip 1 "data/all-students.csv" raw_students
+.import --skip 1 "__DATA_DIR__/data/all-students.csv" raw_students
 
 update raw_students set grade = 9 where grade = '09';
 delete from raw_students where grade <> 9 or active = 0;
 
-.import --skip 1 data/classes.csv classes
+.import --skip 1 __DATA_DIR__/data/classes.csv classes
 
 insert into students
 select student_id, email, first_name, last_name, slc hive

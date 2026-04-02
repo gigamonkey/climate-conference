@@ -1,14 +1,23 @@
-.PHONY: all
+.PHONY: all clean
 
-all: db.db
+ifndef DATA_DIR
+$(error DATA_DIR is not set. Set it to the directory containing data/ and where db.db will be created.)
+endif
+
+DB = $(DATA_DIR)/db.db
+
+all: $(DB)
 
 pugly.sql: schema.sql
 	npx puglify $< > $@
 
-db.db: schema.sql load.sql pugly.sql
+load.sql: load.sql.in
+	sed 's|__DATA_DIR__|$(DATA_DIR)|g' $< > $@
+
+$(DB): schema.sql load.sql pugly.sql
 	sqlite3 $@ < load.sql
-	./load-workshops.js $@ data/workshops.csv data/multiperiod.csv
+	./load-workshops.js $@ $(DATA_DIR)/data/workshops.csv $(DATA_DIR)/data/multiperiod.csv
 	./pad-choices.js $@
 
 clean:
-	rm -f db.db* pugly.sql
+	rm -f $(DB)* pugly.sql load.sql
