@@ -1,5 +1,5 @@
 -- :name possibilities :all
-select email, period, duration, workshop from all_choices;
+select email, period, duration, workshop, workshop_id from all_choices;
 
 -- :name periods :all
 select email, period from student_periods join students using (student_id);
@@ -17,7 +17,7 @@ select distinct workshop from choices where submitted;
 select student_id, 10 - count(*) extra from choices group by student_id having count(*) < 10;
 
 -- :name limits :all
-select distinct workshop, minimum, ideal, maximum from workshops;
+select workshop_id, workshop, period, minimum, ideal, maximum from workshops;
 
 -- :name toSchedule :list
 select distinct student_id studentId from student_periods;

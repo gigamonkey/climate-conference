@@ -48,6 +48,7 @@ create table if not exists raw_workshops (
 
 drop table if exists workshops;
 create table workshops (
+  workshop_id integer primary key,
   workshop text,
   period integer,
   duration integer,

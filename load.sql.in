@@ -98,7 +98,8 @@ select
   email,
   period,
   duration,
-  workshop
+  workshop,
+  workshop_id
 from choices
 join student_periods using (student_id)
 join students using (student_id)
@@ -110,7 +111,8 @@ select
   email,
   period,
   duration,
-  workshop
+  workshop,
+  workshop_id
 from choices
 join students using (student_id)
 join multiperiod using (workshop)

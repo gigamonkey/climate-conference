@@ -2,9 +2,9 @@
 
 ## In progress
 
-## Backlog
-
 - Handle workshops with the same name but different locations. Students should not be assigned to two different workshops with the same name.
+
+## Backlog
 
 ## Done
 

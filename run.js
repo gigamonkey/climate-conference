@@ -46,13 +46,16 @@ const db = new DB(argv[2]).addQueries('queries.sql');
 const popSize = Number(argv[3]);
 const generations = Number(argv[4]);
 
-// Map of workshop names to limits dicts
-const limits = fromEntries(db.limits().map(({workshop, ...limits}) => [ intern(workshop), limits ]));
+// Map of workshop_id to limits dicts
+const limits = fromEntries(db.limits().map(({ workshop_id, workshop, ...rest }) => [workshop_id, rest]));
+
+// Map of workshop_id to workshop name
+const workshopName = fromEntries(db.limits().map(({ workshop_id, workshop }) => [workshop_id, intern(workshop)]));
 
 // Map of student emails to periods that need to be assigned
 const periods = mapValues(groupBy(db.periods(), row => row.email), xs => xs.map(x => x.period));
 
-// Map of student email to choices as (period, duration, workshop) objects.
+// Map of student email to choices as (period, duration, workshop, workshop_id) objects.
 const studentChoices = mapValues(groupBy(db.possibilities(), row => row.email), (choices) => {
   return choices.map(({ email, ...rest }) => {
     rest.workshop = intern(rest.workshop);
@@ -70,7 +73,13 @@ const students = mapValues(studentChoices, (choices, email) => {
 
 const start = new Date().toISOString();
 
-const wa = new WorkshopAssignment(limits, students, mutationRate);
+const wa = new WorkshopAssignment(limits, workshopName, students, mutationRate);
+
+// Translate workshop_ids in DNA back to names for output.
+const dnaWithNames = (dna) => dna.map(({ email, periods }) => ({
+  email,
+  periods: fromEntries(entries(periods).map(([p, id]) => [p, workshopName[id]])),
+}));
 
 const logger = async (g, pop, best) => {
   console.log(`Generation ${g} - best: ${best.fitness}`);
@@ -83,7 +92,8 @@ const logger = async (g, pop, best) => {
         popSize,
         mutationRate,
       },
-      ...best,
+      fitness: best.fitness,
+      dna: dnaWithNames(best.dna),
       stats: wa.stats(best.dna),
     }, null, 2));
 };
