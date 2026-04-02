@@ -46,11 +46,16 @@ const db = new DB(argv[2]).addQueries('queries.sql');
 const popSize = Number(argv[3]);
 const generations = Number(argv[4]);
 
+const limitsRows = db.limits();
+
 // Map of workshop_id to limits dicts
-const limits = fromEntries(db.limits().map(({ workshop_id, workshop, ...rest }) => [workshop_id, rest]));
+const limits = fromEntries(limitsRows.map(({ workshop_id, workshop, location, ...rest }) => [workshop_id, rest]));
 
 // Map of workshop_id to workshop name
-const workshopName = fromEntries(db.limits().map(({ workshop_id, workshop }) => [workshop_id, intern(workshop)]));
+const workshopNames = fromEntries(limitsRows.map(({ workshop_id, workshop }) => [workshop_id, intern(workshop)]));
+
+// Map of workshop_id to location
+const workshopLocations = fromEntries(limitsRows.map(({ workshop_id, location }) => [workshop_id, location]));
 
 // Map of student emails to periods that need to be assigned
 const periods = mapValues(groupBy(db.periods(), row => row.email), xs => xs.map(x => x.period));
@@ -73,12 +78,15 @@ const students = mapValues(studentChoices, (choices, email) => {
 
 const start = new Date().toISOString();
 
-const wa = new WorkshopAssignment(limits, workshopName, students, mutationRate);
+const wa = new WorkshopAssignment(limits, workshopNames, workshopLocations, students, mutationRate);
 
-// Translate workshop_ids in DNA back to names for output.
-const dnaWithNames = (dna) => dna.map(({ email, periods }) => ({
+// Translate workshop_ids in DNA back to names and locations for output.
+const dnaForOutput = (dna) => dna.map(({ email, periods }) => ({
   email,
-  periods: fromEntries(entries(periods).map(([p, id]) => [p, workshopName[id]])),
+  periods: fromEntries(entries(periods).map(([p, id]) => [p, {
+    workshop: workshopNames[id],
+    location: workshopLocations[id],
+  }])),
 }));
 
 const logger = async (g, pop, best) => {
@@ -93,7 +101,7 @@ const logger = async (g, pop, best) => {
         mutationRate,
       },
       fitness: best.fitness,
-      dna: dnaWithNames(best.dna),
+      dna: dnaForOutput(best.dna),
       stats: wa.stats(best.dna),
     }, null, 2));
 };

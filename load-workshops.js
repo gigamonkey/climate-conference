@@ -17,18 +17,18 @@ const db = new DB(program.args[0]).addQueries('pugly.sql');
 
 const rows = db.rawWorkshops();
 
-for (const { workshop, periods, minimum, maximum, ideal } of rows) {
+for (const { workshop, location, periods, minimum, maximum, ideal } of rows) {
   for (const segment of periods.split(',').map(s => s.trim())) {
     const parts = segment.split('-');
     if (parts.length === 1) {
       // Single period, e.g. "3"
       const period = Number(parts[0]);
-      db.makeWorkshop({ workshop, period, duration: 1, minimum, maximum, ideal });
+      db.makeWorkshop({ workshop, location, period, duration: 1, minimum, maximum, ideal });
     } else {
       // Inclusive range, e.g. "1-3" means periods 1, 2, and 3
       const start = Number(parts[0]);
       const end = Number(parts[1]);
-      db.makeWorkshop({ workshop, period: start, duration: (end - start) + 1, minimum, maximum, ideal });
+      db.makeWorkshop({ workshop, location, period: start, duration: (end - start) + 1, minimum, maximum, ideal });
     }
   }
 }

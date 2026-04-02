@@ -8,7 +8,7 @@ const { entries } = Object;
 const data = await loadJSON(argv[2]);
 
 data.dna.forEach(({email, periods}) => {
-  entries(periods).forEach(([period, workshop]) => {
-    console.log([email, period, workshop].join("\t"));
+  entries(periods).forEach(([period, { workshop, location }]) => {
+    console.log([email, period, workshop, location].join("\t"));
   });
 });

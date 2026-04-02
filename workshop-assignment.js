@@ -8,9 +8,10 @@ const { entries, keys, values } = Object;
 
 class WorkshopAssignment {
 
-  constructor(limits, workshopName, students, mutationRate) {
+  constructor(limits, workshopNames, workshopLocations, students, mutationRate) {
     this.limits = limits;
-    this.workshopName = workshopName;
+    this.workshopNames = workshopNames;
+    this.workshopLocations = workshopLocations;
     this.workshops = new Set(keys(limits).map(Number));
     this.students = students;
     this.ordered = values(students);
@@ -18,7 +19,7 @@ class WorkshopAssignment {
   }
 
   randomDNA() {
-    return this.ordered.map(s => randomAssignment(s, this.workshopName));
+    return this.ordered.map(s => randomAssignment(s, this.workshopNames));
   }
 
   mutatedDNA(dna, p) {
@@ -48,7 +49,7 @@ class WorkshopAssignment {
       // This could technically end up putting back the same workshop but maybe
       // that's okay since it's also conceivable that that's the only workshop
       // that can be put in that spot.
-      mutated.periods = randomlyFillPeriods(mutated.periods, student, this.workshopName);
+      mutated.periods = randomlyFillPeriods(mutated.periods, student, this.workshopNames);
       return mutated
     }
     return gene;
@@ -67,7 +68,7 @@ class WorkshopAssignment {
 
       const student = this.students[gene.email];
       const mutated = structuredClone(gene);
-      const assignedNames = new Set(values(gene.periods).map(id => this.workshopName[id]));
+      const assignedNames = new Set(values(gene.periods).map(id => this.workshopNames[id]));
       const notAssigned = student.choices.filter(({workshop}) => !assignedNames.has(workshop));
       const replacement = choose(notAssigned);
 
@@ -83,14 +84,14 @@ class WorkshopAssignment {
       // trips. Though they could be randomly put back.
       if (isFieldTrip(replacement.workshop)) {
         values(mutated.periods)
-          .filter(id => isFieldTrip(this.workshopName[id]))
+          .filter(id => isFieldTrip(this.workshopNames[id]))
           .forEach(id => clearWorkshop(mutated.periods, id));
       }
 
-      check(mutated.periods, this.workshopName)
+      check(mutated.periods, this.workshopNames)
       assignChoice(mutated.periods, replacement);
       try {
-        check(mutated.periods, this.workshopName)
+        check(mutated.periods, this.workshopNames)
       } catch {
         console.log(`Chose ${JSON.stringify(replacement)} from ${JSON.stringify(student.choices)} with already assigned ${JSON.stringify(values(gene.periods))}`);
         console.log(`Should have cleared`);
@@ -99,7 +100,7 @@ class WorkshopAssignment {
         }
         throw new Error(`Error after assigning ${JSON.stringify(replacement)}: ${JSON.stringify(mutated.periods, null, 2)}`);
       }
-      mutated.periods = randomlyFillPeriods(mutated.periods, student, this.workshopName);
+      mutated.periods = randomlyFillPeriods(mutated.periods, student, this.workshopNames);
 
       // Possibly we couldn't fill in the remaining slots?
       if (mutated.periods) {
@@ -152,7 +153,8 @@ class WorkshopAssignment {
       entries(p).forEach(([period, workshopId]) => {
         if (!(workshopId in data)) {
           data[workshopId] = {
-            workshop: this.workshopName[workshopId],
+            workshop: this.workshopNames[workshopId],
+            location: this.workshopLocations[workshopId],
             limits: this.limits[workshopId],
             assigned: 0,
           };
@@ -167,16 +169,16 @@ class WorkshopAssignment {
 /*
  * Make a fresh random assignment of choices for a given student.
  */
-const randomAssignment = (student, workshopName) => {
+const randomAssignment = (student, workshopNames) => {
   const x = {
     email: student.email,
-    periods: randomlyFillPeriods({}, student, workshopName),
+    periods: randomlyFillPeriods({}, student, workshopNames),
   };
   if (!x.periods) throw new Error(`Can't make assignment for ${JSON.stringify(student, null, 2)}`);
   return x;
 };
 
-const randomlyFillPeriods = (assigned, { choices, periods }, workshopName) => {
+const randomlyFillPeriods = (assigned, { choices, periods }, workshopNames) => {
 
   // Recursively fill empty slots with backtracking if we get into a situation
   // where none of the remaining choices can fill an empty period.
@@ -193,15 +195,15 @@ const randomlyFillPeriods = (assigned, { choices, periods }, workshopName) => {
     }
   };
 
-  return check(fill(assigned, shuffled(usableChoices(choices, assigned, workshopName))), workshopName);
+  return check(fill(assigned, shuffled(usableChoices(choices, assigned, workshopNames))), workshopNames);
 };
 
-const check = (r, workshopName) => {
+const check = (r, workshopNames) => {
   if (!r) return r;
 
   const names = {};
   for (const [p, id] of entries(r)) {
-    names[p] = workshopName ? workshopName[id] : id;
+    names[p] = workshopNames ? workshopNames[id] : id;
   }
 
   if ([1,2,3,4,5,6].every(p => names[p] && names[p] === names[1])) {
@@ -215,11 +217,11 @@ const check = (r, workshopName) => {
   return r;
 };
 
-const usableChoices = (choices, assigned, workshopName) => {
+const usableChoices = (choices, assigned, workshopNames) => {
   const ids = values(assigned);
-  const assignedNames = new Set(workshopName ? ids.map(id => workshopName[id]) : ids);
-  const hasFieldTrip = workshopName
-    ? ids.some(id => isFieldTrip(workshopName[id]))
+  const assignedNames = new Set(workshopNames ? ids.map(id => workshopNames[id]) : ids);
+  const hasFieldTrip = workshopNames
+    ? ids.some(id => isFieldTrip(workshopNames[id]))
     : ids.some(isFieldTrip);
   return choices.filter(c => usableChoice(c, assigned, assignedNames, hasFieldTrip));
 };

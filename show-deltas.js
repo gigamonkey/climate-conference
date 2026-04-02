@@ -20,12 +20,10 @@ const emoji = (assigned, ideal, minimum, maximum) => {
 };
 
 
-entries(data.stats).forEach(([workshop, { limits, periods }]) => {
+entries(data.stats).forEach(([workshopId, { workshop, location, limits, assigned }]) => {
   const { minimum, ideal, maximum } = limits;
-  console.log(`${workshop}: min: ${minimum}; ideal: ${ideal}; maximum: ${maximum}`);
-  entries(periods).forEach(([p, assigned]) => {
-    const delta = assigned - ideal;
-    const sym = emoji(assigned, ideal, minimum, maximum)
-    console.log(`  ${sym} Period ${p} - ${assigned} (${delta}) [${workshop} ${minimum}/${ideal}/${maximum}]`);
-  });
+  const delta = assigned - ideal;
+  const sym = emoji(assigned, ideal, minimum, maximum);
+  const loc = location ? ` [${location}]` : '';
+  console.log(`${sym} ${workshop}${loc}: ${assigned} (${delta >= 0 ? '+' : ''}${delta}) [${minimum}/${ideal}/${maximum}]`);
 });
