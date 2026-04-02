@@ -75,7 +75,7 @@ select
   student_id,
   course,
   period
-from classes
+from raw_classes
 join core_classes using (course)
 join students using (student_id)
 left join not_participating using (course, hive)
