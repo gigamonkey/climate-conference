@@ -64,11 +64,7 @@ insert into core_classes(course) values('Math 1 (P)');
 insert into core_classes(course) values('Advanced Math 1');
 
 -- Not participating - except students in these courses/hives
-insert into not_participating(course, hive) values ('English 1 (P)', 'Hive 7');
-insert into not_participating(course, hive) values ('FrshSemHist (P)', 'Hive 7');
-insert into not_participating(course, hive) values ('Math 1 (P)', 'Hive 4');
-insert into not_participating(course, hive) values ('Math 1 (P)', 'Hive 2');
-
+-- insert into not_participating(course, hive) values ('English 1 (P)', 'Hive 7');
 
 drop view if exists student_periods;
 create view student_periods as
