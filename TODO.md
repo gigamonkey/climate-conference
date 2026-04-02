@@ -2,7 +2,7 @@
 
 ## In progress
 
-- Add to data validation script code to make sure all necessary input files exist. Script should say where each file comes from if it is missing.
+- Add to data validation script code to make sure all necessary input files exist. Script should say where each file comes from if it is missing. Use `inputs.json` to get the description of where inputs come from.
 
 ## Backlog
 
