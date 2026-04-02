@@ -7,6 +7,12 @@ select email, period from student_periods join students using (student_id);
 -- :name workshopNames :list
 select workshop from workshops where duration = 1;
 
+-- :name workshopsFromSpreadsheet :list
+select distinct workshop from workshops;
+
+-- :name workshopsFromForm :list
+select distinct workshop from choices where submitted;
+
 -- :name extraNeeded :all
 select student_id, 10 - count(*) extra from choices group by student_id having count(*) < 10;
 

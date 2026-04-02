@@ -4,6 +4,8 @@
 
 ## Backlog
 
+- Handle workshops with the same name but different locations. Students should not be assigned to two different workshops with the same name.
+
 ## Done
 
 - Move data out of project dir. (2026-04-02T07:59:41)
@@ -13,4 +15,6 @@
 - Add to data validation script code to make sure all necessary input files exist. Script should say where each file comes from if it is missing. Use `inputs.json` to get the description of where inputs come from. (2026-04-02T09:06:41)
 
 - Update load-workshops to load from the `raw_workshops` table which contains a `periods` column with a column delimited list of either individual periods, e.g. `1,2,3` or ranges for multiperiod workshops, e.g. `1-2,3-4`. (2026-04-02T09:25:16)
+
+- Write script to try to match up workshop names from `raw_workshops` and `raw_prefs`. Show any that exist in one but not the other. (2026-04-02T10:10:35)
 
