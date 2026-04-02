@@ -1,8 +1,0 @@
-x Function to generate a legal random assignment for a student.
-
-- Pad out students with < 10 choices with random choices.
-
-- Fitness function for an overall set of assignments.
-
-  Roughly speaking, trying to minimize difference from ideal size of each
-  workshop with big penalties for below minimum or above maximum.
