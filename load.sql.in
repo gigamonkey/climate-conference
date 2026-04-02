@@ -5,29 +5,10 @@
 
 update raw_prefs set username = null where username = '';
 
--- Fix some records where the username didn't get filled in (???) and the email had typos
-update raw_prefs set email = 'krisadagrenoble@students.berkeley.net' where email = 'Krisadagrenobls@students.berkeley.ney';
-update raw_prefs set email = 'jevoncooksmith@students.berkeley.net' where email = 'jevoncooksmith@students.berkeley.net)';
-update raw_prefs set email = 'justineyre@students.berkeley.net' where email = 'justineyre@students.berkeley.net ';
-update raw_prefs set email = 'gregoriocs@students.berkeley.net' where email = 'gregoriocs@berkeley.net';
-update raw_prefs set email = 'shiyareynolds@students.berkeley.net' where email = 'shiyareynolds@students.berkely.net';
-update raw_prefs set email = 'ThomasBorovicka@students.berkeley.net' where email = 'ThomasBorovicka2students.berkeley.net';
-update raw_prefs set email = 'emmanuelcamacho@students.berkeley.net' where email = 'emmauelcamacho@students.berkeley.net';
-update raw_prefs set email = 'micahfreedman@students.berkeley.net' where email = 'micahfreedman@students.berkleley.net';
-update raw_prefs set email = 'ezravalenzuela@students.berkeley.net' where email = 'Ezravalenzuela@students.berkley.net';
-update raw_prefs set email = 'menashekirsch@students.berkeley.net' where email = 'menashekirsch';
-update raw_prefs set email = 'Josiahbrown1@students.berkeley.net' where email = 'Josiahbrown1@students.berkeley';
-update raw_prefs set email = 'MossBaradThompson@students.berkeley.net' where email = 'MossBaradThompson@students.berekely.net';
-update raw_prefs set email = 'sebastiansalvatorecastillotenorio@students.berkeley.net' where email = 'sebastiansalvatorecastillotenorio';
-update raw_prefs set email = 'mateoaranguren@students.berkeley.net' where email = 'mateoaranguren@gmail.berkeley.net';
-update raw_prefs set email = 'hezkielclark@students.berkeley.net' where email = 'hezkielclark@gmail.com';
-update raw_prefs set email = 'Bryantsurrell@students.berkeley.net' where email = 'Bryantsurrell@studentss.berkeley.net';
-update raw_prefs set email = 'ellakoepsell@students.berkeley.net' where email = 'ellakoepsell@students.berekeley.net';
-
 -- Put the canonical email addresses in the email field.
 update raw_prefs set email = lower(coalesce(username, email));
 
-.import --skip 1 "__DATA_DIR__/data/all-students.csv" raw_students
+.import --skip 1 "__DATA_DIR__/data/raw_students.csv" raw_students
 
 update raw_students set grade = 9 where grade = '09';
 delete from raw_students where grade <> 9 or active = 0;
