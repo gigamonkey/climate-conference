@@ -20,6 +20,9 @@ if (!dataDir) {
   process.exit(1);
 }
 
+// Load input file descriptions
+const inputs = JSON.parse(await readFile('inputs.json', 'utf-8'));
+
 // Parse raw_ table definitions from schema.sql
 const schema = await readFile('schema.sql', 'utf-8');
 const tableRegex = /create\s+table\s+(?:if\s+not\s+exists\s+)?(raw_\w+)\s*\(([\s\S]*?)\);/gi;
@@ -42,7 +45,8 @@ for (const { name, columns } of tables) {
   try {
     data = await readFile(csvPath, 'utf-8');
   } catch (e) {
-    console.error(`MISSING: ${csvPath}`);
+    const source = inputs[name];
+    console.error(`MISSING: ${csvPath}` + (source ? ` (source: ${source})` : ''));
     exitCode = 1;
     continue;
   }
