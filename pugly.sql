@@ -141,6 +141,30 @@ values
   ($studentId, $name, $email, $grade, $gender, $iep, $slc, $active, $firstName, $lastName);
 
 
+-- raw_workshops -------------------------------------------
+
+-- :name rawWorkshops :all
+select * from raw_workshops;
+
+-- :name insertRawWorkshop :insert
+insert into raw_workshops
+  (workshop, location, periods, minimum, maximum, ideal, errors)
+values
+  ($workshop, $location, $periods, $minimum, $maximum, $ideal, $errors);
+
+-- :name makeRawWorkshop :insert
+insert into raw_workshops
+  (workshop, location, periods, minimum, maximum, ideal, errors)
+values
+  ($workshop, $location, $periods, $minimum, $maximum, $ideal, $errors);
+
+-- :name makeRawWorkshopWithDefaultValues :insert
+insert into raw_workshops
+  (workshop, location, periods, minimum, maximum, ideal, errors)
+values
+  ($workshop, $location, $periods, $minimum, $maximum, $ideal, $errors);
+
+
 -- students ------------------------------------------------
 
 -- :name students :all
