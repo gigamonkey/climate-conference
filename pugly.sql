@@ -196,9 +196,19 @@ select * from workshops;
 
 -- :name insertWorkshop :insert
 insert into workshops
-  (workshop, period, duration, minimum, maximum, ideal)
+  (workshop_id, workshop, period, duration, minimum, maximum, ideal)
 values
-  ($workshop, $period, $duration, $minimum, $maximum, $ideal);
+  ($workshopId, $workshop, $period, $duration, $minimum, $maximum, $ideal);
+
+-- :name workshop :get
+select * from workshops where workshop_id = $workshopId;
+
+-- :name updateWorkshop :run
+update workshops set
+  (workshop, period, duration, minimum, maximum, ideal) =
+  ($workshop, $period, $duration, $minimum, $maximum, $ideal)
+where
+  workshop_id = $workshopId
 
 -- :name makeWorkshop :insert
 insert into workshops
