@@ -7,6 +7,12 @@ select email, period from student_periods join students using (student_id);
 -- :name workshopNames :list
 select workshop from workshops where duration = 1;
 
+-- :name singlePeriodWorkshops :all
+select distinct workshop, period from workshops where duration = 1;
+
+-- :name studentPeriods :all
+select student_id, period from student_periods;
+
 -- :name workshopsFromSpreadsheet :list
 select distinct workshop from workshops;
 

@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
-// Insert into the database random single-period workshop choices until every
-// student has 10.
+// Ensure every student has a single-period workshop choice for each of their
+// available periods, then pad to 10 total choices with random single-period
+// workshops.
 
 import { DB } from 'pugsql';
 import { argv } from 'process';
@@ -14,17 +15,52 @@ const db = new DB(argv[2])
       .addQueries('pugly.sql')
       .addQueries('queries.sql');
 
-const workshops = new Set(db.workshopNames());
-const choices = mapValues(groupBy(db.choices(), row => row.student_id), xs => new Set(xs.map(({workshop, ...x}) => workshop)));
+// All single-period workshop names
+const allWorkshopNames = new Set(db.workshopNames());
 
-const randomChoices = (workshops, chosen) => {
-  return sample([...workshops.difference(chosen)], 10 - chosen.size);
-};
+// Single-period workshops grouped by period: { period -> Set of workshop names }
+const workshopsByPeriod = mapValues(
+  groupBy(db.singlePeriodWorkshops(), r => r.period),
+  xs => new Set(xs.map(x => x.workshop))
+);
 
+// Student periods: { student_id -> [period, ...] }
+const studentPeriods = mapValues(
+  groupBy(db.studentPeriods(), r => r.student_id),
+  xs => xs.map(x => x.period)
+);
+
+// Existing choices: { student_id -> Set of workshop names }
+const choices = mapValues(
+  groupBy(db.choices(), row => row.student_id),
+  xs => new Set(xs.map(x => x.workshop))
+);
+
+// For each student that needs scheduling, figure out which periods have no
+// single-period workshop choice and add one. Then pad to 10 total.
 db.toSchedule().forEach(studentId => {
   const chosen = choices[studentId] || new Set();
+  const periods = studentPeriods[studentId] || [];
+
+  // For each period, check if the student has at least one single-period
+  // workshop choice available in that period. If not, add one.
+  for (const period of periods) {
+    const available = workshopsByPeriod[period];
+    if (!available) continue;
+    const hasChoiceForPeriod = [...chosen].some(w => available.has(w));
+    if (!hasChoiceForPeriod) {
+      const candidates = [...available.difference(chosen)];
+      if (candidates.length > 0) {
+        const workshop = candidates[Math.floor(Math.random() * candidates.length)];
+        chosen.add(workshop);
+        db.insertChoice({ studentId, workshop, submitted: 0 });
+      }
+    }
+  }
+
+  // Pad remaining slots to 10 with random single-period workshops.
   if (chosen.size < 10) {
-    const extra = chosen.size > 0 ? randomChoices(workshops, chosen) : workshops;
+    const extra = sample([...allWorkshopNames.difference(chosen)], 10 - chosen.size);
     extra.forEach(workshop => {
       db.insertChoice({ studentId, workshop, submitted: 0 });
     });
