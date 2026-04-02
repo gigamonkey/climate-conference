@@ -24,6 +24,34 @@ create table raw_students(
   last_name text
 );
 
+drop table if exists raw_classes;
+create table raw_classes (
+  person_id TEXT,
+  student_id TEXT,
+  last_name TEXT,
+  first_name TEXT,
+  middle_name TEXT,
+  nickname TEXT,
+  gender TEXT,
+  grade TEXT,
+  birthdate TEXT,
+  course TEXT,
+  period integer,
+  room TEXT,
+  teacher TEXT,
+  course_section_active TEXT,
+  section_id TEXT,
+  start_date TEXT,
+  end_date TEXT,
+  additional_id TEXT,
+  enrollment_id TEXT,
+  other_id TEXT,
+  end_year TEXT,
+  terms TEXT
+);
+
+
+
 drop table if exists workshops;
 create table workshops (
   workshop text,
@@ -56,33 +84,6 @@ create table prefs(
 
 drop table if exists choices;
 create table choices(student_id text, workshop text, submitted integer);
-
-drop table if exists classes;
-create table classes (
-  person_id TEXT,
-  student_id TEXT,
-  last_name TEXT,
-  first_name TEXT,
-  middle_name TEXT,
-  nickname TEXT,
-  gender TEXT,
-  grade TEXT,
-  birthdate TEXT,
-  course TEXT,
-  period integer,
-  room TEXT,
-  teacher TEXT,
-  course_section_active TEXT,
-  section_id TEXT,
-  start_date TEXT,
-  end_date TEXT,
-  additional_id TEXT,
-  enrollment_id TEXT,
-  other_id TEXT,
-  end_year TEXT,
-  terms TEXT
-);
-
 
 drop table if exists core_classes;
 create table core_classes (course text);
