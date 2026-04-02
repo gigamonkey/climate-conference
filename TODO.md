@@ -2,11 +2,9 @@
 
 ## In progress
 
-- Convert command line scripts to use commander.
+- Can you make a plan for instead of adding random workshops to students choices early on, instead filling in empty spots just before we compute fitness, filling in gaps in students' assignments with random unused workshop spots?
 
 ## Backlog
-
-- Can you make a plan for instead of adding random workshops to students choices early on, instead filling in empty spots just before we compute fitness, filling in gaps in students' assignments with random unused workshop spots?
 
 ## Done
 
@@ -21,4 +19,6 @@
 - Write script to try to match up workshop names from `raw_workshops` and `raw_prefs`. Show any that exist in one but not the other. (2026-04-02T10:10:35)
 
 - Handle workshops with the same name but different locations. Students should not be assigned to two different workshops with the same name. (2026-04-02T13:09:22)
+
+- Convert command line scripts to use commander. (2026-04-02T13:24:54)
 
