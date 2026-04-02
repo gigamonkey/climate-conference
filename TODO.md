@@ -2,9 +2,11 @@
 
 ## In progress
 
-- Can you make a plan for instead of adding random workshops to students choices early on, instead filling in empty spots just before we compute fitness, filling in gaps in students' assignments with random unused workshop spots?
+- Write a script to validate that the email/student_ids pairs in `raw_prefs` match those in `raw_students`.
 
 ## Backlog
+
+- Can you make a plan for instead of adding random workshops to students choices early on, instead filling in empty spots just before we compute fitness, filling in gaps in students' assignments with random unused workshop spots?
 
 ## Done
 

@@ -1,8 +1,8 @@
 -- :name possibilities :all
-select email, period, duration, workshop, workshop_id from all_choices;
+select email, student_id, period, duration, workshop, workshop_id from all_choices;
 
 -- :name periods :all
-select email, period from student_periods join students using (student_id);
+select email, student_id, period from student_periods join students using (student_id);
 
 -- :name workshopNames :list
 select workshop from workshops where duration = 1;

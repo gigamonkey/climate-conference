@@ -62,9 +62,12 @@ const main = (database, options) => {
   // Map of student emails to periods that need to be assigned
   const periods = mapValues(groupBy(db.periods(), row => row.email), xs => xs.map(x => x.period));
 
+  // Map of email to student_id
+  const studentIds = fromEntries(db.periods().map(({ email, student_id }) => [email, student_id]));
+
   // Map of student email to choices as (period, duration, workshop, workshop_id) objects.
   const studentChoices = mapValues(groupBy(db.possibilities(), row => row.email), (choices) => {
-    return choices.map(({ email, ...rest }) => {
+    return choices.map(({ email, student_id, ...rest }) => {
       rest.workshop = intern(rest.workshop);
       return rest;
     });
@@ -73,6 +76,7 @@ const main = (database, options) => {
   const students = mapValues(studentChoices, (choices, email) => {
     return {
       email,
+      student_id: studentIds[email],
       periods: periods[email],
       choices,
     };
@@ -83,8 +87,9 @@ const main = (database, options) => {
   const wa = new WorkshopAssignment(limits, workshopNames, workshopLocations, students, mutationRate);
 
   // Translate workshop_ids in DNA back to names and locations for output.
-  const dnaForOutput = (dna) => dna.map(({ email, periods }) => ({
+  const dnaForOutput = (dna) => dna.map(({ email, student_id, periods }) => ({
     email,
+    student_id,
     periods: fromEntries(entries(periods).map(([p, id]) => [p, {
       workshop: workshopNames[id],
       location: workshopLocations[id],

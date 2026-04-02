@@ -81,8 +81,16 @@ create table prefs(
 drop table if exists choices;
 create table choices(student_id text, workshop text, submitted integer);
 
+drop table if exists assignments;
+create table assignments (
+  student_id text,
+  period integer,
+  workshop text,
+  location text
+);
+
 drop table if exists core_classes;
 create table core_classes (course text);
 
 drop table if exists not_participating;
-create table not_participating (course, hive);
+create table not_participating (teacher TEXT);

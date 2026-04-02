@@ -63,8 +63,8 @@ insert into core_classes(course) values('English 1 (P)');
 insert into core_classes(course) values('Math 1 (P)');
 insert into core_classes(course) values('Advanced Math 1');
 
--- Not participating - except students in these courses/hives
--- insert into not_participating(course, hive) values ('English 1 (P)', 'Hive 7');
+-- Non-participating teachers.
+insert into not_participating (teacher) values ('georgepalen@berkeley.net');
 
 drop view if exists student_periods;
 create view student_periods as
@@ -75,10 +75,10 @@ select
 from raw_classes
 join core_classes using (course)
 join students using (student_id)
-left join not_participating using (course, hive)
+left join not_participating using (teacher)
 where
   end_date = '' and
-  not_participating.course is null
+  not_participating.teacher is null
 group by student_id, course;
 
 
@@ -92,6 +92,7 @@ with
 
 select
   email,
+  student_id,
   period,
   duration,
   workshop,
@@ -105,6 +106,7 @@ union all
 
 select
   email,
+  student_id,
   period,
   duration,
   workshop,

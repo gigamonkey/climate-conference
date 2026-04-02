@@ -1,5 +1,29 @@
 -- Generated with pugilify v0.0.25.
 
+-- assignments ---------------------------------------------
+
+-- :name assignments :all
+select * from assignments;
+
+-- :name insertAssignment :insert
+insert into assignments
+  (student_id, period, workshop, location)
+values
+  ($studentId, $period, $workshop, $location);
+
+-- :name makeAssignment :insert
+insert into assignments
+  (student_id, period, workshop, location)
+values
+  ($studentId, $period, $workshop, $location);
+
+-- :name makeAssignmentWithDefaultValues :insert
+insert into assignments
+  (student_id, period, workshop, location)
+values
+  ($studentId, $period, $workshop, $location);
+
+
 -- choices -------------------------------------------------
 
 -- :name choices :all
@@ -36,13 +60,13 @@ insert into core_classes (course) values ($course);
 select * from not_participating;
 
 -- :name insertNotParticipating :insert
-insert into not_participating (course, hive) values ($course, $hive);
+insert into not_participating (teacher) values ($teacher);
 
 -- :name makeNotParticipating :insert
-insert into not_participating (course, hive) values ($course, $hive);
+insert into not_participating (teacher) values ($teacher);
 
 -- :name makeNotParticipatingWithDefaultValues :insert
-insert into not_participating (course, hive) values ($course, $hive);
+insert into not_participating (teacher) values ($teacher);
 
 
 -- prefs ---------------------------------------------------

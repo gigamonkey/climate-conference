@@ -149,8 +149,12 @@ class WorkshopAssignment {
 
   stats(dna) {
     const data = {};
-    dna.map(g => g.periods).forEach(p => {
-      entries(p).forEach(([period, workshopId]) => {
+    dna.forEach(g => {
+      // Count each workshop_id once per student, not once per period slot.
+      const seen = new Set();
+      entries(g.periods).forEach(([period, workshopId]) => {
+        if (seen.has(workshopId)) return;
+        seen.add(workshopId);
         if (!(workshopId in data)) {
           data[workshopId] = {
             workshop: this.workshopNames[workshopId],
@@ -160,7 +164,7 @@ class WorkshopAssignment {
           };
         }
         data[workshopId].assigned++;
-      })
+      });
     });
     return data;
   }
@@ -172,6 +176,7 @@ class WorkshopAssignment {
 const randomAssignment = (student, workshopNames) => {
   const x = {
     email: student.email,
+    student_id: student.student_id,
     periods: randomlyFillPeriods({}, student, workshopNames),
   };
   if (!x.periods) throw new Error(`Can't make assignment for ${JSON.stringify(student, null, 2)}`);
