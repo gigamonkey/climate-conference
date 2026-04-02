@@ -4,3 +4,4 @@ data/
 db.db*
 node_modules/
 runs/
+load.sql

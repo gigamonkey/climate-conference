@@ -26,31 +26,25 @@ create table raw_students(
 
 drop table if exists raw_classes;
 create table raw_classes (
-  person_id TEXT,
   student_id TEXT,
-  last_name TEXT,
-  first_name TEXT,
-  middle_name TEXT,
-  nickname TEXT,
-  gender TEXT,
-  grade TEXT,
-  birthdate TEXT,
   course TEXT,
-  period integer,
-  room TEXT,
   teacher TEXT,
-  course_section_active TEXT,
+  period integer,
   section_id TEXT,
   start_date TEXT,
-  end_date TEXT,
-  additional_id TEXT,
-  enrollment_id TEXT,
-  other_id TEXT,
-  end_year TEXT,
-  terms TEXT
+  end_date TEXT
 );
 
-
+drop table if exists raw_workshops;
+create table if not exists raw_workshops (
+  workshop TEXT,
+  location TEXT,
+  periods TEXT,
+  minimum INTEGER,
+  maximum INTEGER,
+  ideal TEXT,
+  errors TEXT
+);
 
 drop table if exists workshops;
 create table workshops (

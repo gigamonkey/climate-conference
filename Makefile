@@ -16,8 +16,9 @@ load.sql: load.sql.in
 
 $(DB): schema.sql load.sql pugly.sql
 	sqlite3 $@ < load.sql
-	./load-workshops.js $@ $(DATA_DIR)/workshops.csv $(DATA_DIR)/multiperiod.csv
-	./pad-choices.js $@
+
+# ./load-workshops.js $@ $(DATA_DIR)/workshops.csv $(DATA_DIR)/multiperiod.csv
+# ./pad-choices.js $@
 
 clean:
 	rm -f $(DB)* pugly.sql load.sql
