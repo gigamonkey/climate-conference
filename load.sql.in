@@ -4,6 +4,7 @@
 .import --skip 1 "__DATA_DIR__/raw_prefs.csv" raw_prefs
 .import --skip 1 "__DATA_DIR__/raw_students.csv" raw_students
 .import --skip 1 "__DATA_DIR__/raw_classes.csv" raw_classes
+.import --skip 1 "__DATA_DIR__/raw_workshops.csv" raw_workshops
 
 -- Put the canonical email addresses in the email field.
 update raw_prefs set username = null where username = '';
