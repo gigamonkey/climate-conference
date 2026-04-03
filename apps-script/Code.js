@@ -1,19 +1,11 @@
-// FIXME: update all DOC_IDs.
-
-// let DOC_ID = "1jyXM0wG6ACRth8tvdV-c9ltH0gqnBJzYOU70EvJljk8";
-//const ATTENDANCE_SHEETS_DOC = '10jZtXjAbTjg2fTO_gxtSQDYmslzozM4QUlIOJ6mweSY'
-
 const STUDENT_SCHEDULES_DOC = '1eOm4ztEFctRXu2wYKygMSIYPreJiVe0G0NGBlCXV3SY';
 const ATTENDANCE_DOC = '1SWXu_A62zCHuF4h2iJeHhFLu6fWx3ApdWu8y_k0q-78';
 const ATTENDANCE_SPREADSHEET = '1q8hMHtpqaqY9XJT-OEvJfSj60PvCNdDZKzpJMU4J54I';
+
 /**
- * Creates a Google Doc with data from the active spreadsheet.
- * Add this function to your Google Sheet script editor and run it.
+ * Make a Google Doc with one page per student with their workshop schedule.
  */
-
-
-// Pulls from "Assignments" and "Rooms"
-function makeStudentSchedulesDoc() {
+const makeStudentSchedulesDoc = () => {
 
   const ts = new Date().toLocaleString();
 
@@ -95,7 +87,7 @@ function makeStudentSchedulesDoc() {
   let url = doc.getUrl();
   console.log('Document created successfully: ' + url);
   return url;
-}
+};
 
 const loadRooms = (sheet) => {
   return Object.fromEntries(sheet.getDataRange().getValues().slice(1));
@@ -108,14 +100,14 @@ const loadAttendance = (sheet) => {
 /**
  * Creates a menu item for the function.
  */
-function onOpen() {
+const onOpen = () => {
   var ui = SpreadsheetApp.getUi();
   ui.createMenu('Custom Tools')
     .addItem('Create student schedules', 'makeStudentSchedulesDoc')
     .addItem('Make attendance sheets doc', 'makeAttendanceDoc')
     .addItem('Make attendance spreadsheet', 'makeAttendanceSpreadsheet')
     .addToUi();
-}
+};
 
 const emboldenRow = (table, rowIndex) => {
   let row = table.getRow(rowIndex);
@@ -125,7 +117,7 @@ const emboldenRow = (table, rowIndex) => {
 };
 
 /*
- * The printable attendance sheets.
+ * Make a Google Doc of printable attendance sheets.
  */
 const makeAttendanceDoc = () => {
 
@@ -179,7 +171,7 @@ const makeAttendanceDoc = () => {
 
 
 /**
- * A Google Sheet with a tab per workshop for recording attendance.
+ * Make a Google Sheet with a tab per workshop for recording attendance.
  */
 const makeAttendanceSpreadsheet = () => {
   const ts = new Date().toLocaleString();
