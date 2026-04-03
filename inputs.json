@@ -1,5 +1,6 @@
 {
   "raw_prefs": "Preferences form",
-  "raw_students": "IC query student all students",
-  "raw_classes": "IC query student by period"
+  "raw_workshops": "Workshops spreadsheet",
+  "students": "IC / Climate conference / student 9th graders",
+  "classes": "IC / Climate conference / student classes"
 }

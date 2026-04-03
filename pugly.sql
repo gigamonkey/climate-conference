@@ -39,6 +39,30 @@ insert into choices (student_id, workshop, submitted) values ($studentId, $works
 insert into choices (student_id, workshop, submitted) values ($studentId, $workshop, $submitted);
 
 
+-- classes -------------------------------------------------
+
+-- :name classes :all
+select * from classes;
+
+-- :name insertClass :insert
+insert into classes
+  (student_id, course, teacher_email, period, section_id, start_date, end_date)
+values
+  ($studentId, $course, $teacherEmail, $period, $sectionId, $startDate, $endDate);
+
+-- :name makeClass :insert
+insert into classes
+  (student_id, course, teacher_email, period, section_id, start_date, end_date)
+values
+  ($studentId, $course, $teacherEmail, $period, $sectionId, $startDate, $endDate);
+
+-- :name makeClassWithDefaultValues :insert
+insert into classes
+  (student_id, course, teacher_email, period, section_id, start_date, end_date)
+values
+  ($studentId, $course, $teacherEmail, $period, $sectionId, $startDate, $endDate);
+
+
 -- core_classes --------------------------------------------
 
 -- :name coreClasses :all
@@ -60,13 +84,13 @@ insert into core_classes (course) values ($course);
 select * from not_participating;
 
 -- :name insertNotParticipating :insert
-insert into not_participating (teacher) values ($teacher);
+insert into not_participating (teacher_email) values ($teacherEmail);
 
 -- :name makeNotParticipating :insert
-insert into not_participating (teacher) values ($teacher);
+insert into not_participating (teacher_email) values ($teacherEmail);
 
 -- :name makeNotParticipatingWithDefaultValues :insert
-insert into not_participating (teacher) values ($teacher);
+insert into not_participating (teacher_email) values ($teacherEmail);
 
 
 -- prefs ---------------------------------------------------
@@ -93,30 +117,6 @@ values
   ($timestamp, $studentId, $email, $lastName, $firstName, $hive, $workshops);
 
 
--- raw_classes ---------------------------------------------
-
--- :name rawClasses :all
-select * from raw_classes;
-
--- :name insertRawClass :insert
-insert into raw_classes
-  (student_id, course, teacher, period, section_id, start_date, end_date)
-values
-  ($studentId, $course, $teacher, $period, $sectionId, $startDate, $endDate);
-
--- :name makeRawClass :insert
-insert into raw_classes
-  (student_id, course, teacher, period, section_id, start_date, end_date)
-values
-  ($studentId, $course, $teacher, $period, $sectionId, $startDate, $endDate);
-
--- :name makeRawClassWithDefaultValues :insert
-insert into raw_classes
-  (student_id, course, teacher, period, section_id, start_date, end_date)
-values
-  ($studentId, $course, $teacher, $period, $sectionId, $startDate, $endDate);
-
-
 -- raw_prefs -----------------------------------------------
 
 -- :name rawPrefs :all
@@ -139,30 +139,6 @@ insert into raw_prefs
   (timestamp, username, last_name, first_name, email, student_id, hive, workshops)
 values
   ($timestamp, $username, $lastName, $firstName, $email, $studentId, $hive, $workshops);
-
-
--- raw_students --------------------------------------------
-
--- :name rawStudents :all
-select * from raw_students;
-
--- :name insertRawStudent :insert
-insert into raw_students
-  (student_id, name, email, grade, gender, iep, slc, active, first_name, last_name)
-values
-  ($studentId, $name, $email, $grade, $gender, $iep, $slc, $active, $firstName, $lastName);
-
--- :name makeRawStudent :insert
-insert into raw_students
-  (student_id, name, email, grade, gender, iep, slc, active, first_name, last_name)
-values
-  ($studentId, $name, $email, $grade, $gender, $iep, $slc, $active, $firstName, $lastName);
-
--- :name makeRawStudentWithDefaultValues :insert
-insert into raw_students
-  (student_id, name, email, grade, gender, iep, slc, active, first_name, last_name)
-values
-  ($studentId, $name, $email, $grade, $gender, $iep, $slc, $active, $firstName, $lastName);
 
 
 -- raw_workshops -------------------------------------------
@@ -196,21 +172,21 @@ select * from students;
 
 -- :name insertStudent :insert
 insert into students
-  (student_id, email, first_name, last_name, hive)
+  (student_id, first_name, last_name, alias, hive, email)
 values
-  ($studentId, $email, $firstName, $lastName, $hive);
+  ($studentId, $firstName, $lastName, $alias, $hive, $email);
 
 -- :name makeStudent :insert
 insert into students
-  (student_id, email, first_name, last_name, hive)
+  (student_id, first_name, last_name, alias, hive, email)
 values
-  ($studentId, $email, $firstName, $lastName, $hive);
+  ($studentId, $firstName, $lastName, $alias, $hive, $email);
 
 -- :name makeStudentWithDefaultValues :insert
 insert into students
-  (student_id, email, first_name, last_name, hive)
+  (student_id, first_name, last_name, alias, hive, email)
 values
-  ($studentId, $email, $firstName, $lastName, $hive);
+  ($studentId, $firstName, $lastName, $alias, $hive, $email);
 
 
 -- workshops -----------------------------------------------

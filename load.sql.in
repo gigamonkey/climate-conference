@@ -1,22 +1,19 @@
+-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-- !!! Do not edit load.sql. Edit load.sql.in !!!
+-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 .read schema.sql
 
 .mode csv
 .import --skip 1 "__DATA_DIR__/raw_prefs.csv" raw_prefs
-.import --skip 1 "__DATA_DIR__/raw_students.csv" raw_students
-.import --skip 1 "__DATA_DIR__/raw_classes.csv" raw_classes
 .import --skip 1 "__DATA_DIR__/raw_workshops.csv" raw_workshops
+.import --skip 1 "__DATA_DIR__/students.csv" students
+.import --skip 1 "__DATA_DIR__/classes.csv" classes
+.import --skip 1 "__DATA_DIR__/not_participating.csv" not_participating
 
 -- Put the canonical email addresses in the email field.
 update raw_prefs set username = null where username = '';
 update raw_prefs set email = lower(coalesce(username, email));
-
--- We only care about active 9th graders.
-update raw_students set grade = 9 where grade = '09';
-delete from raw_students where grade <> 9 or active = 0;
-
-insert into students
-select student_id, email, first_name, last_name, slc hive
-from raw_students where slc like 'Hive %';
 
 insert into prefs
 with ranked as (
@@ -64,7 +61,7 @@ insert into core_classes(course) values('Math 1 (P)');
 insert into core_classes(course) values('Advanced Math 1');
 
 -- Non-participating teachers.
-insert into not_participating (teacher) values ('georgepalen@berkeley.net');
+insert into not_participating (teacher_email) values ('georgepalen@berkeley.net');
 
 drop view if exists student_periods;
 create view student_periods as
@@ -72,13 +69,13 @@ select
   student_id,
   course,
   period
-from raw_classes
+from classes
 join core_classes using (course)
 join students using (student_id)
-left join not_participating using (teacher)
+left join not_participating using (teacher_email)
 where
   end_date = '' and
-  not_participating.teacher is null
+  not_participating.teacher_email is null
 group by student_id, course;
 
 

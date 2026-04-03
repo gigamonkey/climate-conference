@@ -10,31 +10,6 @@ create table if not exists raw_prefs (
   workshops TEXT
 );
 
-drop table if exists raw_students;
-create table raw_students(
-  student_id text,
-  name text,
-  email text,
-  grade integer,
-  gender text,
-  iep text,
-  slc text,
-  active integer,
-  first_name text,
-  last_name text
-);
-
-drop table if exists raw_classes;
-create table raw_classes (
-  student_id TEXT,
-  course TEXT,
-  teacher TEXT,
-  period integer,
-  section_id TEXT,
-  start_date TEXT,
-  end_date TEXT
-);
-
 drop table if exists raw_workshops;
 create table if not exists raw_workshops (
   workshop TEXT,
@@ -44,6 +19,27 @@ create table if not exists raw_workshops (
   maximum INTEGER,
   ideal TEXT,
   errors TEXT
+);
+
+drop table if exists students;
+create table  students (
+  student_id TEXT,
+  first_name TEXT,
+  last_name TEXT,
+  alias TEXT,
+  hive TEXT,
+  email TEXT
+);
+
+drop table if exists classes;
+create table classes (
+  student_id TEXT,
+  course TEXT,
+  teacher_email TEXT,
+  period integer,
+  section_id TEXT,
+  start_date TEXT,
+  end_date TEXT
 );
 
 drop table if exists workshops;
@@ -58,15 +54,6 @@ create table workshops (
   ideal integer
 );
 
-drop table if exists students;
-create table students(
-  student_id text,
-  email text,
-  first_name text,
-  last_name text,
-  hive text
-);
-
 drop table if exists prefs;
 create table prefs(
   timestamp text,
@@ -79,7 +66,11 @@ create table prefs(
 );
 
 drop table if exists choices;
-create table choices(student_id text, workshop text, submitted integer);
+create table choices(
+  student_id text,
+  workshop text,
+  submitted integer
+);
 
 drop table if exists assignments;
 create table assignments (
@@ -93,4 +84,4 @@ drop table if exists core_classes;
 create table core_classes (course text);
 
 drop table if exists not_participating;
-create table not_participating (teacher TEXT);
+create table not_participating (teacher_email TEXT);
