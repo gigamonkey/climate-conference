@@ -1,6 +1,8 @@
-const STUDENT_SCHEDULES_DOC = '1eOm4ztEFctRXu2wYKygMSIYPreJiVe0G0NGBlCXV3SY';
-const ATTENDANCE_DOC = '1SWXu_A62zCHuF4h2iJeHhFLu6fWx3ApdWu8y_k0q-78';
-const ATTENDANCE_SPREADSHEET = '1q8hMHtpqaqY9XJT-OEvJfSj60PvCNdDZKzpJMU4J54I';
+// Google Drive folder where generated docs/sheets are created.
+const OUTPUT_FOLDER_ID = '162-aYXQwvHRdceTfcOFFK8i9MOc8nFPa';
+
+// Template doc to copy for student schedules (has desired formatting/styling).
+const SCHEDULES_TEMPLATE_ID = '1eOm4ztEFctRXu2wYKygMSIYPreJiVe0G0NGBlCXV3SY';
 
 /**
  * Load the "Assignments" sheet and return structured data.
@@ -10,7 +12,7 @@ const ATTENDANCE_SPREADSHEET = '1q8hMHtpqaqY9XJT-OEvJfSj60PvCNdDZKzpJMU4J54I';
  *
  * Returns:
  *   students: Map of student_id -> { name, email, periods: [{period, workshop, location}] }
- *   byWorkshop: Map of "workshop|period" -> { workshop, period, location, names: [name, ...] }
+ *   byWorkshop: Map of "workshop|location|period" -> { workshop, period, location, names: [name, ...] }
  */
 const loadAssignments = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -47,6 +49,32 @@ const loadAssignments = () => {
 };
 
 /**
+ * Create a new Google Doc in the output folder. If templateId is provided,
+ * copy that doc; otherwise create a blank one.
+ */
+const createDoc = (name, templateId) => {
+  const folder = DriveApp.getFolderById(OUTPUT_FOLDER_ID);
+  if (templateId) {
+    const copy = DriveApp.getFileById(templateId).makeCopy(name, folder);
+    const doc = DocumentApp.openById(copy.getId());
+    doc.getBody().clear();
+    return doc;
+  }
+  const doc = DocumentApp.create(name);
+  DriveApp.getFileById(doc.getId()).moveTo(folder);
+  return doc;
+};
+
+/**
+ * Create a new Google Spreadsheet in the output folder and return it.
+ */
+const createSpreadsheet = (name) => {
+  const ss = SpreadsheetApp.create(name);
+  DriveApp.getFileById(ss.getId()).moveTo(DriveApp.getFolderById(OUTPUT_FOLDER_ID));
+  return ss;
+};
+
+/**
  * Make a Google Doc with one page per student with their workshop schedule.
  */
 const makeStudentSchedulesDoc = () => {
@@ -57,14 +85,9 @@ const makeStudentSchedulesDoc = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   const docName = spreadsheet.getName() + " - Per Student " + ts;
 
-  let doc = DocumentApp.openById(STUDENT_SCHEDULES_DOC);
+  let doc = createDoc(docName, SCHEDULES_TEMPLATE_ID);
+  let docId = doc.getId();
   let body = doc.getBody();
-  body.clear();
-  doc.saveAndClose();
-  console.log('Cleared doc');
-
-  doc = DocumentApp.openById(STUDENT_SCHEDULES_DOC);
-  body = doc.getBody();
 
   body.appendParagraph(docName).setHeading(DocumentApp.ParagraphHeading.HEADING1);
   body.appendParagraph("Generated on: " + ts).setItalic(true);
@@ -98,7 +121,7 @@ const makeStudentSchedulesDoc = () => {
     if (i % 50 === 0) {
       console.log(`Saving at ${i}`);
       doc.saveAndClose();
-      doc = DocumentApp.openById(STUDENT_SCHEDULES_DOC);
+      doc = DocumentApp.openById(docId);
       body = doc.getBody();
     }
   }
@@ -124,17 +147,10 @@ const makeAttendanceDoc = () => {
   console.log("Starting " + ts);
 
   const { byWorkshop } = loadAssignments();
+  const docName = "Climate Workshop Attendance Sheets " + ts;
 
-  let doc = DocumentApp.openById(ATTENDANCE_DOC);
-  const docName = "Climate Workshop Attendance Sheets";
-
+  let doc = createDoc(docName);
   let body = doc.getBody();
-  body.clear();
-  doc.saveAndClose();
-  console.log('Cleared doc');
-
-  doc = DocumentApp.openById(ATTENDANCE_DOC);
-  body = doc.getBody();
 
   body.appendParagraph(docName).setHeading(DocumentApp.ParagraphHeading.HEADING1);
   body.appendParagraph("Generated on: " + ts).setItalic(true);
@@ -174,25 +190,17 @@ const makeAttendanceSpreadsheet = () => {
   console.log("Starting " + ts);
 
   const { byWorkshop } = loadAssignments();
+  const sheetName = "Climate Workshop Attendance Sheets " + ts;
 
-  const targetSpreadsheet = SpreadsheetApp.openById(ATTENDANCE_SPREADSHEET);
+  const targetSpreadsheet = createSpreadsheet(sheetName);
 
-  // Delete all existing sheets except one (keep for info)
-  const sheets = targetSpreadsheet.getSheets();
-  if (sheets.length > 0) {
-    const infoSheet = sheets[0];
-    infoSheet.setName("Info");
-
-    for (let i = 1; i < sheets.length; i++) {
-      targetSpreadsheet.deleteSheet(sheets[i]);
-    }
-
-    infoSheet.clear();
-    infoSheet.getRange("A1").setValue("Climate Workshop Attendance Sheets");
-    infoSheet.getRange("A2").setValue("Generated on: " + ts);
-    infoSheet.getRange("A1:A2").setFontWeight("bold");
-    infoSheet.getRange("A2").setFontStyle("italic");
-  }
+  // Set up info on the default sheet
+  const infoSheet = targetSpreadsheet.getSheets()[0];
+  infoSheet.setName("Info");
+  infoSheet.getRange("A1").setValue(sheetName);
+  infoSheet.getRange("A2").setValue("Generated on: " + ts);
+  infoSheet.getRange("A1:A2").setFontWeight("bold");
+  infoSheet.getRange("A2").setFontStyle("italic");
 
   // Sort by workshop name then period
   const sorted = Object.values(byWorkshop).sort((a, b) =>
@@ -200,9 +208,10 @@ const makeAttendanceSpreadsheet = () => {
   );
 
   sorted.forEach(({ workshop, period, location, names }) => {
-    const sheetName = `${workshop} - P${period}`.slice(0, 100);
+    const loc = location ? ` [${location}]` : '';
+    const tabName = `${workshop} - P${period}${loc}`.slice(0, 100);
 
-    let sheet = targetSpreadsheet.insertSheet(sheetName);
+    let sheet = targetSpreadsheet.insertSheet(tabName);
 
     // Header row
     sheet.getRange("A1:B1").setValues([['Name', 'P/T/A']]);
