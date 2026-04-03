@@ -68,16 +68,20 @@ const createSpreadsheet = (name) => {
   return ss;
 };
 
+const makeDocName = (suffix) => {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  return `${spreadsheet.getName()} - ${suffix}`;
+};
+
+
 /**
  * Make a Google Doc with one page per student with their workshop schedule.
  */
 const makeStudentSchedulesDoc = () => {
   const ts = new Date().toLocaleString();
-  console.log("Starting " + ts);
+  const docName = makeDocName('Student schedules');
 
   const { students } = loadAssignments();
-  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  const docName = spreadsheet.getName() + " - Per Student " + ts;
 
   let doc = createDoc(docName, CONFIG.SCHEDULES_TEMPLATE_ID);
   let docId = doc.getId();
@@ -140,10 +144,9 @@ const emboldenRow = (table, rowIndex) => {
  */
 const makeAttendanceDoc = () => {
   const ts = new Date().toLocaleString();
-  console.log("Starting " + ts);
+  const docName = makeDocName('Attendance sheets');
 
   const { byWorkshop } = loadAssignments();
-  const docName = "Climate Workshop Attendance Sheets " + ts;
 
   let doc = createDoc(docName);
   let body = doc.getBody();
@@ -183,17 +186,16 @@ const makeAttendanceDoc = () => {
  */
 const makeAttendanceSpreadsheet = () => {
   const ts = new Date().toLocaleString();
-  console.log("Starting " + ts);
+  const docName = makeDocName('Attendance spreadsheet');
 
   const { byWorkshop } = loadAssignments();
-  const sheetName = "Climate Workshop Attendance Sheets " + ts;
 
-  const targetSpreadsheet = createSpreadsheet(sheetName);
+  const targetSpreadsheet = createSpreadsheet(docName);
 
   // Set up info on the default sheet
   const infoSheet = targetSpreadsheet.getSheets()[0];
   infoSheet.setName("Info");
-  infoSheet.getRange("A1").setValue(sheetName);
+  infoSheet.getRange("A1").setValue(docName);
   infoSheet.getRange("A2").setValue("Generated on: " + ts);
   infoSheet.getRange("A1:A2").setFontWeight("bold");
   infoSheet.getRange("A2").setFontStyle("italic");
