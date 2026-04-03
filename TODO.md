@@ -2,11 +2,7 @@
 
 ## In progress
 
-- Write a script to validate that the email/student_ids pairs in `raw_prefs` match those in `raw_students`.
-
 ## Backlog
-
-- Can you make a plan for instead of adding random workshops to students choices early on, instead filling in empty spots just before we compute fitness, filling in gaps in students' assignments with random unused workshop spots?
 
 ## Done
 
@@ -23,4 +19,8 @@
 - Handle workshops with the same name but different locations. Students should not be assigned to two different workshops with the same name. (2026-04-02T13:09:22)
 
 - Convert command line scripts to use commander. (2026-04-02T13:24:54)
+
+- Write a script to validate that the email/student_ids pairs in `raw_prefs` match those in `raw_students`. (2026-04-02T15:32:20)
+
+- Can you make a plan for instead of adding random workshops to students choices early on, instead filling in empty spots just before we compute fitness, filling in gaps in students' assignments with random unused workshop spots? (2026-04-02T20:09:36)
 

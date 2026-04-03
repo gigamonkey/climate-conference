@@ -8,10 +8,11 @@ const { entries, keys, values } = Object;
 
 class WorkshopAssignment {
 
-  constructor(limits, workshopNames, workshopLocations, students, mutationRate) {
+  constructor(limits, workshopNames, workshopLocations, fallbacks, students, mutationRate) {
     this.limits = limits;
     this.workshopNames = workshopNames;
     this.workshopLocations = workshopLocations;
+    this.fallbacks = fallbacks;
     this.workshops = new Set(keys(limits).map(Number));
     this.students = students;
     this.ordered = values(students);
@@ -19,7 +20,7 @@ class WorkshopAssignment {
   }
 
   randomDNA() {
-    return this.ordered.map(s => randomAssignment(s, this.workshopNames));
+    return this.ordered.map(s => randomAssignment(s, this.workshopNames, this.fallbacks));
   }
 
   mutatedDNA(dna, p) {
@@ -49,7 +50,7 @@ class WorkshopAssignment {
       // This could technically end up putting back the same workshop but maybe
       // that's okay since it's also conceivable that that's the only workshop
       // that can be put in that spot.
-      mutated.periods = randomlyFillPeriods(mutated.periods, student, this.workshopNames);
+      mutated.periods = randomlyFillPeriods(mutated.periods, student, this.workshopNames, this.fallbacks);
       return mutated
     }
     return gene;
@@ -70,6 +71,7 @@ class WorkshopAssignment {
       const mutated = structuredClone(gene);
       const assignedNames = new Set(values(gene.periods).map(id => this.workshopNames[id]));
       const notAssigned = student.choices.filter(({workshop}) => !assignedNames.has(workshop));
+      if (notAssigned.length === 0) return gene;
       const replacement = choose(notAssigned);
 
       // Clear all the workshops that occupy periods the replacement needs to be
@@ -100,7 +102,7 @@ class WorkshopAssignment {
         }
         throw new Error(`Error after assigning ${JSON.stringify(replacement)}: ${JSON.stringify(mutated.periods, null, 2)}`);
       }
-      mutated.periods = randomlyFillPeriods(mutated.periods, student, this.workshopNames);
+      mutated.periods = randomlyFillPeriods(mutated.periods, student, this.workshopNames, this.fallbacks);
 
       // Possibly we couldn't fill in the remaining slots?
       if (mutated.periods) {
@@ -173,17 +175,17 @@ class WorkshopAssignment {
 /*
  * Make a fresh random assignment of choices for a given student.
  */
-const randomAssignment = (student, workshopNames) => {
+const randomAssignment = (student, workshopNames, fallbacks) => {
   const x = {
     email: student.email,
     student_id: student.student_id,
-    periods: randomlyFillPeriods({}, student, workshopNames),
+    periods: randomlyFillPeriods({}, student, workshopNames, fallbacks),
   };
   if (!x.periods) throw new Error(`Can't make assignment for ${JSON.stringify(student, null, 2)}`);
   return x;
 };
 
-const randomlyFillPeriods = (assigned, { choices, periods }, workshopNames) => {
+const randomlyFillPeriods = (assigned, { choices, periods }, workshopNames, fallbacks) => {
 
   // Recursively fill empty slots with backtracking if we get into a situation
   // where none of the remaining choices can fill an empty period.
@@ -200,7 +202,20 @@ const randomlyFillPeriods = (assigned, { choices, periods }, workshopNames) => {
     }
   };
 
-  return check(fill(assigned, shuffled(usableChoices(choices, assigned, workshopNames))), workshopNames);
+  // First try with the student's own choices.
+  const result = fill(assigned, shuffled(usableChoices(choices, assigned, workshopNames)));
+  if (result) return check(result, workshopNames);
+
+  // If that fails, add fallback workshops for unfilled periods and retry.
+  if (fallbacks) {
+    const unfilledPeriods = periods.filter(p => !(p in assigned));
+    const fallbackChoices = unfilledPeriods.flatMap(p => fallbacks[p] || []);
+    const allChoices = [...choices, ...fallbackChoices];
+    const result2 = fill(assigned, shuffled(usableChoices(allChoices, assigned, workshopNames)));
+    if (result2) return check(result2, workshopNames);
+  }
+
+  return false;
 };
 
 const check = (r, workshopNames) => {

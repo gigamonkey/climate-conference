@@ -17,7 +17,9 @@ load.sql: load.sql.in
 $(DB): schema.sql load.sql pugly.sql
 	sqlite3 $@ < load.sql
 	./load-workshops.js $@
+ifdef PAD_CHOICES
 	./pad-choices.js $@
+endif
 
 clean:
 	rm -f $(DB)* pugly.sql load.sql
