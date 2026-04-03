@@ -20,7 +20,20 @@ class WorkshopAssignment {
   }
 
   randomDNA() {
-    return this.ordered.map(s => randomAssignment(s, this.workshopNames, this.fallbacks));
+    // Track running enrollment counts so fallback selection can prefer
+    // under-subscribed workshops.
+    const counts = {};
+    return this.ordered.map(s => {
+      const gene = randomAssignment(s, this.workshopNames, this.fallbacks, counts, this.limits);
+      // Update running counts with this student's assignments.
+      const seen = new Set();
+      entries(gene.periods).forEach(([p, id]) => {
+        if (seen.has(id)) return;
+        seen.add(id);
+        counts[id] = (counts[id] || 0) + 1;
+      });
+      return gene;
+    });
   }
 
   mutatedDNA(dna, p) {
@@ -35,7 +48,21 @@ class WorkshopAssignment {
     return p1.map((g, i) => this.maybeMutate2((random() < 0.5 ? g : p2[i])));
   }
 
-  maybeMutate(gene) {
+  // Compute enrollment counts from a DNA (workshop_id -> number of students).
+  enrollmentCounts(dna) {
+    const counts = {};
+    dna.forEach(g => {
+      const seen = new Set();
+      entries(g.periods).forEach(([p, id]) => {
+        if (seen.has(id)) return;
+        seen.add(id);
+        counts[id] = (counts[id] || 0) + 1;
+      });
+    });
+    return counts;
+  }
+
+  maybeMutate(gene, counts) {
     if (p(this.mutationRate)) {
       // Mutate by picking a workshop to remove, clearing whatever periods it's
       // in, and then randomly refilling those periods the same way we did when
@@ -50,13 +77,13 @@ class WorkshopAssignment {
       // This could technically end up putting back the same workshop but maybe
       // that's okay since it's also conceivable that that's the only workshop
       // that can be put in that spot.
-      mutated.periods = randomlyFillPeriods(mutated.periods, student, this.workshopNames, this.fallbacks);
+      mutated.periods = randomlyFillPeriods(mutated.periods, student, this.workshopNames, this.fallbacks, counts, this.limits);
       return mutated
     }
     return gene;
   }
 
-  maybeMutate2(gene) {
+  maybeMutate2(gene, counts) {
     if (p(this.mutationRate)) {
       // Mutate by picking a random workshop from choices and assign it. This
       // allows multi-period workshops a chance to get filled in a way the other
@@ -102,7 +129,7 @@ class WorkshopAssignment {
         }
         throw new Error(`Error after assigning ${JSON.stringify(replacement)}: ${JSON.stringify(mutated.periods, null, 2)}`);
       }
-      mutated.periods = randomlyFillPeriods(mutated.periods, student, this.workshopNames, this.fallbacks);
+      mutated.periods = randomlyFillPeriods(mutated.periods, student, this.workshopNames, this.fallbacks, counts, this.limits);
 
       // Possibly we couldn't fill in the remaining slots?
       if (mutated.periods) {
@@ -139,7 +166,8 @@ class WorkshopAssignment {
   // No crossing; just mutate the best organism
   nextGeneration(population) {
     const best = fittest(population);
-    const baby = () => best.dna.map(g => this.maybeMutate2(g))
+    const counts = this.enrollmentCounts(best.dna);
+    const baby = () => best.dna.map(g => this.maybeMutate2(g, counts))
     const next = Array(population.length - 1).fill().map(baby);
     next.push(best.dna);
     return next;
@@ -175,16 +203,16 @@ class WorkshopAssignment {
 /*
  * Make a fresh random assignment of choices for a given student.
  */
-const randomAssignment = (student, workshopNames, fallbacks) => {
+const randomAssignment = (student, workshopNames, fallbacks, counts, limits) => {
   const x = {
     student_id: student.student_id,
-    periods: randomlyFillPeriods({}, student, workshopNames, fallbacks),
+    periods: randomlyFillPeriods({}, student, workshopNames, fallbacks, counts, limits),
   };
   if (!x.periods) throw new Error(`Can't make assignment for ${JSON.stringify(student, null, 2)}`);
   return x;
 };
 
-const randomlyFillPeriods = (assigned, { choices, periods }, workshopNames, fallbacks) => {
+const randomlyFillPeriods = (assigned, { choices, periods }, workshopNames, fallbacks, counts, limits) => {
 
   // Recursively fill empty slots with backtracking if we get into a situation
   // where none of the remaining choices can fill an empty period.
@@ -206,15 +234,30 @@ const randomlyFillPeriods = (assigned, { choices, periods }, workshopNames, fall
   if (result) return check(result, workshopNames);
 
   // If that fails, add fallback workshops for unfilled periods and retry.
+  // Sort fallbacks so under-subscribed workshops come first.
   if (fallbacks) {
     const unfilledPeriods = periods.filter(p => !(p in assigned));
     const fallbackChoices = unfilledPeriods.flatMap(p => fallbacks[p] || []);
-    const allChoices = [...choices, ...fallbackChoices];
-    const result2 = fill(assigned, shuffled(usableChoices(allChoices, assigned, workshopNames)));
+    const sorted = sortByNeed(fallbackChoices, counts, limits);
+    const allChoices = [...shuffled(usableChoices(choices, assigned, workshopNames)), ...usableChoices(sorted, assigned, workshopNames)];
+    const result2 = fill(assigned, allChoices);
     if (result2) return check(result2, workshopNames);
   }
 
   return false;
+};
+
+/*
+ * Sort fallback choices so workshops furthest below their ideal come first.
+ * This biases the backtracking fill toward under-subscribed workshops.
+ */
+const sortByNeed = (choices, counts, limits) => {
+  if (!counts || !limits) return shuffled(choices);
+  return [...choices].sort((a, b) => {
+    const needA = (limits[a.workshop_id]?.ideal || 0) - (counts[a.workshop_id] || 0);
+    const needB = (limits[b.workshop_id]?.ideal || 0) - (counts[b.workshop_id] || 0);
+    return needB - needA; // highest need first
+  });
 };
 
 const check = (r, workshopNames) => {

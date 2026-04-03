@@ -144,7 +144,6 @@ Each gene is an object:
 
 ```
 {
-  email: "student@berkeley.net",
   student_id: "12345",
   periods: { 1: 42, 2: 17, 3: 42, 5: 8, 6: 31 }
 }
@@ -291,6 +290,33 @@ fitness reaches 1.0 (perfect assignment). In practice, perfect fitness is
 rarely achieved because total enrollment demand may not exactly match total
 ideal capacity. The optimizer converges toward the best achievable balance
 given the constraints.
+
+### Fallback Workshops and Choice Padding
+
+Students who didn't submit enough preferences to cover all their periods (or
+who only submitted multi-period choices that can't fill every slot) need
+"fallback" workshops — single-period workshops they didn't choose, assigned to
+fill the gaps.
+
+The current approach pads each student's choice list in memory at startup
+(`run.js`): for any period not covered by a submitted single-period choice,
+all available single-period workshops for that period are added to the
+student's choices. This gives the optimizer full control over those slots —
+mutations can swap between fallback workshops just like submitted preferences.
+Students whose submitted choices already cover all periods are unaffected and
+will never be assigned a workshop they didn't choose. Use `show-fallbacks.js`
+to see which students ended up with fallback assignments and what their
+original choices were.
+
+There is also a secondary fallback mechanism in `randomlyFillPeriods` that
+adds fallback workshops during the backtracking fill if the student's choices
+(including any padded fallbacks) can't cover all periods. With the in-memory
+padding, this code path should never be reached in practice.
+
+**TODO**: Once we've confirmed the in-memory padding approach works well
+across multiple runs, remove the secondary fallback mechanism in
+`randomlyFillPeriods` and the `fallbacks` parameter threading to simplify
+the code.
 
 ## Configuration
 

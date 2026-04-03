@@ -86,12 +86,20 @@ const main = (database, options) => {
 
   // Build students from periods (all students who need scheduling), not from
   // possibilities, so students with no matching choices still get assigned
-  // via fallbacks.
+  // via fallbacks. Only add fallback workshops for periods where the student
+  // has no submitted single-period choice, so students with sufficient
+  // preferences are never assigned a workshop they didn't choose.
   const students = mapValues(periods, (studentPeriods, student_id) => {
+    const submitted = studentChoices[student_id] || [];
+    const submittedSingleByPeriod = new Set(
+      submitted.filter(c => c.duration === 1).map(c => c.period)
+    );
+    const uncoveredPeriods = studentPeriods.filter(p => !submittedSingleByPeriod.has(p));
+    const fallbackChoices = uncoveredPeriods.flatMap(p => fallbacks[p] || []);
     return {
       student_id,
       periods: studentPeriods,
-      choices: studentChoices[student_id] || [],
+      choices: [...submitted, ...fallbackChoices],
     };
   });
 

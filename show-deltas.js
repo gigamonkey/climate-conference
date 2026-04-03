@@ -21,18 +21,18 @@ const main = async (jsonFile, options) => {
   const data = await loadJSON(jsonFile);
 
   if (options.tsv) {
-    console.log(['workshop', 'location', 'assigned', 'minimum', 'ideal', 'maximum'].join('\t'));
+    console.log(['workshop', 'period', 'location', 'assigned', 'minimum', 'ideal', 'maximum'].join('\t'));
     entries(data.stats).forEach(([workshopId, { workshop, location, limits, assigned }]) => {
-      const { minimum, ideal, maximum } = limits;
-      console.log([workshop, location || '', assigned, minimum, ideal, maximum].join('\t'));
+      const { period, minimum, ideal, maximum } = limits;
+      console.log([workshop, period, location || '', assigned, minimum, ideal, maximum].join('\t'));
     });
   } else {
     entries(data.stats).forEach(([workshopId, { workshop, location, limits, assigned }]) => {
-      const { minimum, ideal, maximum } = limits;
+      const { period, minimum, ideal, maximum } = limits;
       const delta = assigned - ideal;
       const sym = emoji(assigned, ideal, minimum, maximum);
       const loc = location ? ` [${location}]` : '';
-      console.log(`${sym} ${workshop}${loc}: ${assigned} (${delta >= 0 ? '+' : ''}${delta}) [${minimum}/${ideal}/${maximum}]`);
+      console.log(`${sym} ${workshop} P${period}${loc}: ${assigned} (${delta >= 0 ? '+' : ''}${delta}) [${minimum}/${ideal}/${maximum}]`);
     });
   }
 };
