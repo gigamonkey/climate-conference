@@ -12,7 +12,7 @@ const SCHEDULES_TEMPLATE_ID = '1eOm4ztEFctRXu2wYKygMSIYPreJiVe0G0NGBlCXV3SY';
  *
  * Returns:
  *   students: Map of student_id -> { name, email, periods: [{period, workshop, location}] }
- *   byWorkshop: Map of "workshop|location|period" -> { workshop, period, location, names: [name, ...] }
+ *   byWorkshop: Map of "workshop|location|period" -> { workshop, period, location, students: [{student_id, name}, ...] }
  */
 const loadAssignments = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -34,16 +34,16 @@ const loadAssignments = () => {
     // Build per-workshop data
     const key = `${workshop}|${location}|${period}`;
     if (!byWorkshop[key]) {
-      byWorkshop[key] = { workshop, period, location, names: [] };
+      byWorkshop[key] = { workshop, period, location, students: [] };
     }
-    byWorkshop[key].names.push(name);
+    byWorkshop[key].students.push({ student_id, name });
   });
 
   // Sort each student's periods
   Object.values(students).forEach(s => s.periods.sort((a, b) => a.period - b.period));
 
-  // Sort names within each workshop
-  Object.values(byWorkshop).forEach(w => w.names.sort());
+  // Sort students within each workshop by name
+  Object.values(byWorkshop).forEach(w => w.students.sort((a, b) => a.name.localeCompare(b.name)));
 
   return { students, byWorkshop };
 };
@@ -94,12 +94,14 @@ const makeStudentSchedulesDoc = () => {
   body.appendPageBreak();
 
   // Sort students by name
-  const sorted = Object.values(students).sort((a, b) => a.name.localeCompare(b.name));
+  const sorted = Object.entries(students)
+    .map(([student_id, s]) => ({ student_id, ...s }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   for (let i = 0; i < sorted.length; i++) {
     const student = sorted[i];
 
-    body.appendParagraph(student.name)
+    body.appendParagraph(`${student.name} (#${student.student_id})`)
       .setHeading(DocumentApp.ParagraphHeading.HEADING1);
 
     const tableData = student.periods.map(({ period, workshop, location }) =>
@@ -160,7 +162,7 @@ const makeAttendanceDoc = () => {
     a.workshop.localeCompare(b.workshop) || a.period - b.period
   );
 
-  sorted.forEach(({ workshop, period, location, names }) => {
+  sorted.forEach(({ workshop, period, location, students }) => {
     body.appendPageBreak();
     const heading = location
       ? `${workshop} - P${period} [${location}]`
@@ -169,7 +171,7 @@ const makeAttendanceDoc = () => {
 
     const tableData = [
       ['Name', 'P/T/A'],
-      ...names.map(n => [n, ''])
+      ...students.map(({ name, student_id }) => [`${name} (#${student_id})`, ''])
     ];
     const table = body.appendTable(tableData);
     table.setBorderColor('#cccccc');
@@ -207,33 +209,34 @@ const makeAttendanceSpreadsheet = () => {
     a.workshop.localeCompare(b.workshop) || a.period - b.period
   );
 
-  sorted.forEach(({ workshop, period, location, names }) => {
+  sorted.forEach(({ workshop, period, location, students }) => {
     const loc = location ? ` [${location}]` : '';
     const tabName = `${workshop} - P${period}${loc}`.slice(0, 100);
 
     let sheet = targetSpreadsheet.insertSheet(tabName);
 
     // Header row
-    sheet.getRange("A1:B1").setValues([['Name', 'P/T/A']]);
-    sheet.getRange("A1:B1").setFontWeight("bold");
-    sheet.getRange("A1:B1").setBackground("#f3f3f3");
+    sheet.getRange("A1:C1").setValues([['Student ID', 'Name', 'P/T/A']]);
+    sheet.getRange("A1:C1").setFontWeight("bold");
+    sheet.getRange("A1:C1").setBackground("#f3f3f3");
 
-    // Student names
-    if (names.length > 0) {
-      const dataRange = sheet.getRange(2, 1, names.length, 2);
-      const dataValues = names.map(name => [name, '']);
+    // Student data
+    if (students.length > 0) {
+      const dataRange = sheet.getRange(2, 1, students.length, 3);
+      const dataValues = students.map(({ student_id, name }) => [student_id, name, '']);
       dataRange.setValues(dataValues);
     }
 
     // Formatting
-    sheet.setColumnWidth(1, 250);
-    sheet.setColumnWidth(2, 100);
+    sheet.setColumnWidth(1, 100);
+    sheet.setColumnWidth(2, 250);
+    sheet.setColumnWidth(3, 100);
 
-    const fullRange = sheet.getRange(1, 1, names.length + 1, 2);
+    const fullRange = sheet.getRange(1, 1, students.length + 1, 3);
     fullRange.setBorder(true, true, true, true, true, true, '#cccccc', SpreadsheetApp.BorderStyle.SOLID);
 
     sheet.setFrozenRows(1);
-    sheet.autoResizeColumns(1, 2);
+    sheet.autoResizeColumns(1, 3);
   });
 
   targetSpreadsheet.setActiveSheet(targetSpreadsheet.getSheets()[0]);
