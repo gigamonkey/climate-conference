@@ -8,9 +8,10 @@ const { entries } = Object;
 const main = async (jsonFile) => {
   const data = await loadJSON(jsonFile);
 
-  data.dna.forEach(({student_id, email, periods}) => {
+  console.log(['student_id', 'name', 'email', 'period', 'workshop', 'location'].join('\t'));
+  data.dna.forEach(({student_id, name, email, periods}) => {
     entries(periods).forEach(([period, { workshop, location }]) => {
-      console.log([student_id, email, period, workshop, location].join("\t"));
+      console.log([student_id, name, email, period, workshop, location].join("\t"));
     });
   });
 };
