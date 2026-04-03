@@ -1,12 +1,19 @@
 // FIXME: update all DOC_IDs.
 
-let DOC_ID = "1jyXM0wG6ACRth8tvdV-c9ltH0gqnBJzYOU70EvJljk8";
+// let DOC_ID = "1jyXM0wG6ACRth8tvdV-c9ltH0gqnBJzYOU70EvJljk8";
+//const ATTENDANCE_SHEETS_DOC = '10jZtXjAbTjg2fTO_gxtSQDYmslzozM4QUlIOJ6mweSY'
 
+const STUDENT_SCHEDULES_DOC = '1eOm4ztEFctRXu2wYKygMSIYPreJiVe0G0NGBlCXV3SY';
+const ATTENDANCE_DOC = '1SWXu_A62zCHuF4h2iJeHhFLu6fWx3ApdWu8y_k0q-78';
+const ATTENDANCE_SPREADSHEET = '1q8hMHtpqaqY9XJT-OEvJfSj60PvCNdDZKzpJMU4J54I';
 /**
  * Creates a Google Doc with data from the active spreadsheet.
  * Add this function to your Google Sheet script editor and run it.
  */
-function createDocFromSheet() {
+
+
+// Pulls from "Assignments" and "Rooms"
+function makeStudentSchedulesDoc() {
 
   const ts = new Date().toLocaleString();
 
@@ -23,17 +30,17 @@ function createDocFromSheet() {
   var data = dataRange.getValues();
 
   let docName = spreadsheet.getName() + " - Per Student " + ts;
-  let doc = DocumentApp.openById(DOC_ID);
+  let doc = DocumentApp.openById(STUDENT_SCHEDULES_DOC);
   //let doc = DocumentApp.create(docName);
-  //DOC_ID = doc.getId();
-  //console.log(`Created doc ${DOC_ID}`);
+  //STUDENT_SCHEDULES_DOC = doc.getId();
+  //console.log(`Created doc ${STUDENT_SCHEDULES_DOC}`);
 
   let body = doc.getBody();
   body.clear();
   doc.saveAndClose();
   console.log('Cleared doc');
 
-  doc = DocumentApp.openById(DOC_ID);
+  doc = DocumentApp.openById(STUDENT_SCHEDULES_DOC);
   body = doc.getBody();
 
   // Add a title to the document
@@ -79,7 +86,7 @@ function createDocFromSheet() {
     if (i % 50 === 0) {
       console.log(`Saving at ${i}`);
       doc.saveAndClose();
-      doc = DocumentApp.openById(DOC_ID);
+      doc = DocumentApp.openById(STUDENT_SCHEDULES_DOC);
       body = doc.getBody();
     }
   }
@@ -104,7 +111,9 @@ const loadAttendance = (sheet) => {
 function onOpen() {
   var ui = SpreadsheetApp.getUi();
   ui.createMenu('Custom Tools')
-    .addItem('Create Doc from Sheet', 'createDocFromSheet')
+    .addItem('Create student schedules', 'makeStudentSchedulesDoc')
+    .addItem('Make attendance sheets doc', 'makeAttendanceDoc')
+    .addItem('Make attendance spreadsheet', 'makeAttendanceSpreadsheet')
     .addToUi();
 }
 
@@ -115,74 +124,10 @@ const emboldenRow = (table, rowIndex) => {
   }
 };
 
-
-const makeAttendanceSheets = () => {
-
-  const ts = new Date().toLocaleString();
-
-  console.log("Starting " + ts);
-
-  // Get the active spreadsheet
-  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  let attendance = loadAttendance(spreadsheet.getSheetByName("For attendance"));
-
-  DOC_ID = '10jZtXjAbTjg2fTO_gxtSQDYmslzozM4QUlIOJ6mweSY';
-
-  let doc = DocumentApp.openById(DOC_ID);
-  const docName = "Climate Workshop Attendance Sheets";
-  //let doc = DocumentApp.create(docName);
-  //DOC_ID = doc.getId();
-  //console.log(`Created doc ${DOC_ID}`);
-
-  let body = doc.getBody();
-  body.clear();
-  doc.saveAndClose();
-  console.log('Cleared doc');
-
-  doc = DocumentApp.openById(DOC_ID);
-  body = doc.getBody();
-
-  // Add a title to the document
-  body.appendParagraph(docName).setHeading(DocumentApp.ParagraphHeading.HEADING1);
-
-  body.appendParagraph("Generated on: " + ts).setItalic(true);
-
-
-  let current = undefined;
-  let tableData = undefined;
-
-  const makeTable = (current, tableData) => {
-    body.appendPageBreak();
-    body.appendParagraph(current).setHeading(DocumentApp.ParagraphHeading.HEADING1);
-    const table = body.appendTable(tableData);
-    table.setBorderColor('#cccccc');
-    emboldenRow(table, 0);
-  };
-
-  attendance.forEach(([workshop, name]) => {
-    if (workshop !== current) {
-      if (current) {
-        makeTable(current, tableData);
-        //doc.saveAndClose();
-        //doc = DocumentApp.openById(DOC_ID);
-        //body = doc.getBody();
-      }
-      current = workshop;
-      tableData = [['Name', 'P/T/A']];
-    } else {
-      tableData.push([name, '']);
-    }
-  });
-  makeTable(current, tableData);
-  doc.saveAndClose();
-
-  let url = doc.getUrl();
-  console.log('Document created successfully: ' + url);
-  return url;
-};
-
-
-const makeAttendanceSheets2 = () => {
+/*
+ * The printable attendance sheets.
+ */
+const makeAttendanceDoc = () => {
 
   const ts = new Date().toLocaleString();
 
@@ -192,20 +137,21 @@ const makeAttendanceSheets2 = () => {
   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   let workshops = loadAttendance(spreadsheet.getSheetByName("By workshop"));
 
-  DOC_ID = '10jZtXjAbTjg2fTO_gxtSQDYmslzozM4QUlIOJ6mweSY';
+  let docId = ATTENDANCE_DOC;
 
-  let doc = DocumentApp.openById(DOC_ID);
+  let doc = DocumentApp.openById(docId);
   const docName = "Climate Workshop Attendance Sheets";
+
   //let doc = DocumentApp.create(docName);
-  //DOC_ID = doc.getId();
-  //console.log(`Created doc ${DOC_ID}`);
+  //docId = doc.getId();
+  //console.log(`Created doc ${docId}`);
 
   let body = doc.getBody();
   body.clear();
   doc.saveAndClose();
   console.log('Cleared doc');
 
-  doc = DocumentApp.openById(DOC_ID);
+  doc = DocumentApp.openById(docId);
   body = doc.getBody();
 
   // Add a title to the document
@@ -229,13 +175,13 @@ const makeAttendanceSheets2 = () => {
   let url = doc.getUrl();
   console.log('Document created successfully: ' + url);
   return url;
-}
+};
 
 
 /**
- * Creates a Google Sheet with a tab per workshop instead of a Google Doc with a page per table
+ * A Google Sheet with a tab per workshop for recording attendance.
  */
-const makeAttendanceSheets3 = () => {
+const makeAttendanceSpreadsheet = () => {
   const ts = new Date().toLocaleString();
   console.log("Starting " + ts);
 
@@ -245,88 +191,81 @@ const makeAttendanceSheets3 = () => {
 
   // Create a new spreadsheet or use an existing one
   // Uncomment the following lines if you want to create a new spreadsheet each time
-  const newSpreadsheet = SpreadsheetApp.create("Climate Workshop Attendance Sheets");
-  const SHEET_ID = newSpreadsheet.getId();
-  console.log(`Created sheet ${SHEET_ID}`);
+  // const newSpreadsheet = SpreadsheetApp.create("Climate Workshop Attendance Sheets");
+  // const sheetId = newSpreadsheet.getId();
+  // console.log(`Created sheet ${sheetId}`);
+  //const targetSpreadsheet = newSpreadsheet;
 
-  const targetSpreadsheet = newSpreadsheet;
+  const targetSpreadsheet = SpreadsheetApp.openById(ATTENDANCE_SPREADSHEET);
 
-  // Or use an existing spreadsheet (similar to your DOC_ID approach)
-  //const SHEET_ID = '1abc123YourExistingSheetIDHere456xyz';
-  //const targetSpreadsheet = SpreadsheetApp.openById(SHEET_ID);
-  
   // Delete all existing sheets except one (we'll use this as our info sheet)
   const sheets = targetSpreadsheet.getSheets();
   if (sheets.length > 0) {
     // Keep the first sheet for info
     const infoSheet = sheets[0];
     infoSheet.setName("Info");
-    
+
     // Delete all other sheets
     for (let i = 1; i < sheets.length; i++) {
       targetSpreadsheet.deleteSheet(sheets[i]);
     }
-    
+
     // Clear the info sheet
     infoSheet.clear();
-    
+
     // Add title and timestamp to info sheet
     infoSheet.getRange("A1").setValue("Climate Workshop Attendance Sheets");
     infoSheet.getRange("A2").setValue("Generated on: " + ts);
     infoSheet.getRange("A1:A2").setFontWeight("bold");
     infoSheet.getRange("A2").setFontStyle("italic");
   }
-  
+
   // Create a sheet for each workshop
   workshops.forEach(([workshop, period, num, names]) => {
     // Create a sanitized sheet name (sheets have limitations on name characters)
     const sheetName = `${workshop} - P${period}`.slice(0, 100);
-    
+
     // Create a new sheet
     let sheet = targetSpreadsheet.insertSheet(sheetName);
-    
+
     // Parse the names from the semicolon-separated string
     const namesList = names.split('; ')
                           .map(n => n.trim())
                           .filter(n => n.length > 0)
                           .sort();
-    
+
     // Create the header row
     sheet.getRange("A1:B1").setValues([['Name', 'P/T/A']]);
     sheet.getRange("A1:B1").setFontWeight("bold");
     sheet.getRange("A1:B1").setBackground("#f3f3f3");
-    
+
     // Add the names to the sheet
     if (namesList.length > 0) {
       const dataRange = sheet.getRange(2, 1, namesList.length, 2);
       const dataValues = namesList.map(name => [name, '']);
       dataRange.setValues(dataValues);
     }
-    
+
     // Format the sheet
     sheet.setColumnWidth(1, 250); // Name column
     sheet.setColumnWidth(2, 100); // P/T/A column
-    
+
     // Add borders to the table
     const fullRange = sheet.getRange(1, 1, namesList.length + 1, 2);
     fullRange.setBorder(true, true, true, true, true, true, '#cccccc', SpreadsheetApp.BorderStyle.SOLID);
-    
+
     // Freeze the header row
     sheet.setFrozenRows(1);
-    
+
     // Auto-resize columns to fit content
     sheet.autoResizeColumns(1, 2);
   });
-  
+
   // Activate the first sheet (info sheet)
   targetSpreadsheet.setActiveSheet(targetSpreadsheet.getSheets()[0]);
-  
+
   // Return the URL of the spreadsheet
   const url = targetSpreadsheet.getUrl();
   console.log('Spreadsheet created successfully: ' + url);
   return url;
 };
-
-
-
-
