@@ -13,8 +13,8 @@ const main = (database) => {
   const db = new DB(database).addQueries('queries.sql');
 
   const rows = db.possibilities();
-  const byEmail = groupBy(rows, row => row.email);
-  const byPeriod = mapValues(byEmail, rows => mapValues(groupBy(rows, row => row.period), rows => rows.map(x => x.workshop)));
+  const byStudent = groupBy(rows, row => row.student_id);
+  const byPeriod = mapValues(byStudent, rows => mapValues(groupBy(rows, row => row.period), rows => rows.map(x => x.workshop)));
 
   dumpJSON(byPeriod);
 };

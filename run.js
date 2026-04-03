@@ -68,14 +68,16 @@ const main = (database, options) => {
     }))
   );
 
-  // Map of student emails to periods that need to be assigned
-  const periods = mapValues(groupBy(db.periods(), row => row.email), xs => xs.map(x => x.period));
+  // Student info for output enrichment (student_id -> {email, name})
+  const studentInfo = fromEntries(db.studentInfo().map(({ student_id, email, first_name, last_name }) =>
+    [student_id, { email, name: `${last_name}, ${first_name}` }]
+  ));
 
-  // Map of email to student_id
-  const studentIds = fromEntries(db.periods().map(({ email, student_id }) => [email, student_id]));
+  // Map of student_id to periods that need to be assigned
+  const periods = mapValues(groupBy(db.periods(), row => row.student_id), xs => xs.map(x => x.period));
 
-  // Map of student email to choices as (period, duration, workshop, workshop_id) objects.
-  const studentChoices = mapValues(groupBy(db.possibilities(), row => row.email), (choices) => {
+  // Map of student_id to choices as (period, duration, workshop, workshop_id) objects.
+  const studentChoices = mapValues(groupBy(db.possibilities(), row => row.student_id), (choices) => {
     return choices.map(({ email, student_id, ...rest }) => {
       rest.workshop = intern(rest.workshop);
       return rest;
@@ -85,12 +87,11 @@ const main = (database, options) => {
   // Build students from periods (all students who need scheduling), not from
   // possibilities, so students with no matching choices still get assigned
   // via fallbacks.
-  const students = mapValues(periods, (studentPeriods, email) => {
+  const students = mapValues(periods, (studentPeriods, student_id) => {
     return {
-      email,
-      student_id: studentIds[email],
+      student_id,
       periods: studentPeriods,
-      choices: studentChoices[email] || [],
+      choices: studentChoices[student_id] || [],
     };
   });
 
@@ -98,10 +99,11 @@ const main = (database, options) => {
 
   const wa = new WorkshopAssignment(limits, workshopNames, workshopLocations, fallbacks, students, mutationRate);
 
-  // Translate workshop_ids in DNA back to names and locations for output.
-  const dnaForOutput = (dna) => dna.map(({ email, student_id, periods }) => ({
-    email,
+  // Translate workshop_ids in DNA back to names and locations for output,
+  // and enrich with student email and name.
+  const dnaForOutput = (dna) => dna.map(({ student_id, periods }) => ({
     student_id,
+    ...studentInfo[student_id],
     periods: fromEntries(entries(periods).map(([p, id]) => [p, {
       workshop: workshopNames[id],
       location: workshopLocations[id],

@@ -24,3 +24,5 @@
 
 - Can you make a plan for instead of adding random workshops to students choices early on, instead filling in empty spots just before we compute fitness, filling in gaps in students' assignments with random unused workshop spots? (2026-04-02T20:09:36)
 
+- Switch to using `student_id` as the key everywhere. (2026-04-02T20:37:28)
+

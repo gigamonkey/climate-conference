@@ -41,7 +41,7 @@ class WorkshopAssignment {
       // in, and then randomly refilling those periods the same way we did when
       // we made the assignment.
 
-      const student = this.students[gene.email];
+      const student = this.students[gene.student_id];
       const mutated = structuredClone(gene);
 
       const workshopId = choose(values(mutated.periods));
@@ -67,7 +67,7 @@ class WorkshopAssignment {
       // occupant of the new choice's period. Then assign the new choice and
       // then randomly fill periods to fill in any other empty periods.
 
-      const student = this.students[gene.email];
+      const student = this.students[gene.student_id];
       const mutated = structuredClone(gene);
       const assignedNames = new Set(values(gene.periods).map(id => this.workshopNames[id]));
       const notAssigned = student.choices.filter(({workshop}) => !assignedNames.has(workshop));
@@ -177,7 +177,6 @@ class WorkshopAssignment {
  */
 const randomAssignment = (student, workshopNames, fallbacks) => {
   const x = {
-    email: student.email,
     student_id: student.student_id,
     periods: randomlyFillPeriods({}, student, workshopNames, fallbacks),
   };

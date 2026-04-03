@@ -13,8 +13,8 @@ const mapValues = (obj, fn) => fromEntries(entries(obj).map(([k, v]) => [k, fn(v
 const main = (database) => {
   const db = new DB(database).addQueries('queries.sql');
 
-  const periods = mapValues(groupBy(db.periods(), row => row.email), xs => xs.map(x => x.period));
-  const choices = mapValues(groupBy(db.possibilities(), row => row.email), xs => xs.map(({email, ...x}) => x));
+  const periods = mapValues(groupBy(db.periods(), row => row.student_id), xs => xs.map(x => x.period));
+  const choices = mapValues(groupBy(db.possibilities(), row => row.student_id), xs => xs.map(({email, student_id, ...x}) => x));
 
   const combined = mapValues(choices, (v, k) => {
     const student = {
