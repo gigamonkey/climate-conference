@@ -15,6 +15,12 @@
 update raw_prefs set username = null where username = '';
 update raw_prefs set email = lower(coalesce(username, email));
 
+-- Proper nulls so we can coalesce
+update students set alias = null where alias = '';
+
+-- A handful of students where the alias field was used weirdly (to explain pronunciation)
+.read "__DATA_DIR__/alias_fixups.sql"
+
 insert into prefs
 with ranked as (
   select *, rank() over (partition by email order by timestamp desc) rank from raw_prefs

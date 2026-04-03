@@ -14,7 +14,7 @@ select distinct workshop, period from workshops where duration = 1;
 select student_id, period from student_periods;
 
 -- :name studentInfo :all
-select student_id, email, first_name, last_name, hive from students;
+select student_id, email, coalesce(alias, first_name) first_name, last_name, hive from students;
 
 -- :name workshopsFromSpreadsheet :list
 select distinct workshop from workshops;

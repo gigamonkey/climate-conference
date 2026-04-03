@@ -26,3 +26,5 @@
 
 - Switch to using `student_id` as the key everywhere. (2026-04-02T20:37:28)
 
+- Prefer nickname to first name. (2026-04-03T11:06:16)
+
