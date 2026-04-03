@@ -1,9 +1,3 @@
-// Google Drive folder where generated docs/sheets are created.
-const OUTPUT_FOLDER_ID = '162-aYXQwvHRdceTfcOFFK8i9MOc8nFPa';
-
-// Template doc to copy for student schedules (has desired formatting/styling).
-const SCHEDULES_TEMPLATE_ID = '1eOm4ztEFctRXu2wYKygMSIYPreJiVe0G0NGBlCXV3SY';
-
 /**
  * Load the "Assignments" sheet and return structured data.
  *
@@ -53,7 +47,7 @@ const loadAssignments = () => {
  * copy that doc; otherwise create a blank one.
  */
 const createDoc = (name, templateId) => {
-  const folder = DriveApp.getFolderById(OUTPUT_FOLDER_ID);
+  const folder = DriveApp.getFolderById(CONFIG.OUTPUT_FOLDER_ID);
   if (templateId) {
     const copy = DriveApp.getFileById(templateId).makeCopy(name, folder);
     const doc = DocumentApp.openById(copy.getId());
@@ -70,7 +64,7 @@ const createDoc = (name, templateId) => {
  */
 const createSpreadsheet = (name) => {
   const ss = SpreadsheetApp.create(name);
-  DriveApp.getFileById(ss.getId()).moveTo(DriveApp.getFolderById(OUTPUT_FOLDER_ID));
+  DriveApp.getFileById(ss.getId()).moveTo(DriveApp.getFolderById(CONFIG.OUTPUT_FOLDER_ID));
   return ss;
 };
 
@@ -85,7 +79,7 @@ const makeStudentSchedulesDoc = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   const docName = spreadsheet.getName() + " - Per Student " + ts;
 
-  let doc = createDoc(docName, SCHEDULES_TEMPLATE_ID);
+  let doc = createDoc(docName, CONFIG.SCHEDULES_TEMPLATE_ID);
   let docId = doc.getId();
   let body = doc.getBody();
 
