@@ -4,10 +4,6 @@
 
 ## Backlog
 
-- Add Hive to attendance sheets.
-
-- Add "kids on field trips" report. Maybe just a sheet in the spreadsheet.
-
 - Clean up scripts. Some are no longer needed.
 
 ## Done
@@ -33,4 +29,8 @@
 - Switch to using `student_id` as the key everywhere. (2026-04-02T20:37:28)
 
 - Prefer nickname to first name. (2026-04-03T11:06:16)
+
+- Add Hive to attendance sheets. (2026-04-07T06:57:14)
+
+- Add "kids on field trips" report. Maybe just a sheet in the spreadsheet. (2026-04-07T06:57:21)
 
