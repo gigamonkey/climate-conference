@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+sqlite3 "$DATA_DIR/db.db"
