@@ -45,6 +45,8 @@ generation.
 
 ## Project Structure
 
+### Core
+
 ```
 run.js                  Entry point: loads data, runs GA, writes results
 ga.js                   Generic genetic algorithm framework
@@ -53,14 +55,59 @@ queries.sql             PugSQL named queries used by run.js
 schema.sql              Database table definitions
 load.sql.in             Data import template (CSV -> tables; Makefile generates load.sql)
 load-workshops.js       Loads workshop CSVs into the workshops table
-pad-choices.js          Pads student choices to 10 with random workshops
-show-assignments.js     Display assignments as TSV
-dump-assignments.js     Export assignments from DB as JSON
-show-deltas.js          Compare two assignment versions
+pad-choices.js          Pads student choices with random workshops for uncovered periods
+```
+
+### Reporting & Analysis
+
+```
+show-assignments.js     Display assignments as TSV (one row per student, columns per period)
+dump-assignments.js     Dump GA result JSON as TSV (one row per student-period)
+show-deltas.js          Show workshop enrollment vs ideal with emoji indicators
+show-periods.js         Show workshop enrollment grouped by period
+show-fallbacks.js       Identify students assigned workshops they didn't submit
+```
+
+### Validation
+
+```
+validate-inputs.js      Check CSV files exist and have expected headers
+validate-students.js    Verify email/student_id consistency across tables
+match-workshops.js      Compare workshop names between spreadsheet and form
+```
+
+### Post-GA
+
+```
+load-assignments.js     Load a GA result JSON back into the assignments table
+```
+
+### Data & Output
+
+```
 $DATA_DIR/              Input CSV files (outside project directory)
 $DATA_DIR/runs/         Output directory (timestamped GA results)
 $DATA_DIR/db.db         SQLite database (built by make)
 app-script/             Google Apps Script for generating documents
+```
+
+### Utilities
+
+```
+file-util.js            JSON/CSV/TSV/gzip file I/O helpers
+util.js                 Math and object helpers (sum, variance, mapValues, etc.)
+random.js               Random selection, shuffling, and sampling
+```
+
+### Vestigial (not used)
+
+```
+school-assignment.js    Alternate problem definition for a different domain (broken import)
+dump-json.js            Ad-hoc data dump script
+dump-json2.js           Ad-hoc data dump script (variant)
+test-random-sample.js   Sampling algorithm test harness
+clean-schema.js         One-off utility for normalizing CSV column names
+db-smoke-test.js        Database connectivity smoke test
 ```
 
 ## Database Schema
@@ -77,14 +124,14 @@ are possible; only the most recent is used. Consumed by `load.sql` to populate
 `prefs`.
 
 **`raw_students`** — Raw student roster imported from the school's student
-information system. Contains demographic and enrollment data (grade, gender,
-IEP status, SLC/hive assignment). Filtered during load to only active 9th
-graders. Consumed by `load.sql` to populate `students`.
+information system. Contains `student_id`, `first_name`, `last_name`, `alias`,
+`hive`, and `email`. Filtered during load to students in a Hive SLC.
+Consumed by `load.sql` to populate `students`.
 
-**`students`** — Clean student table with just the fields the optimizer needs:
-`student_id`, `email`, `first_name`, `last_name`, and `hive` (the small
-learning community the student belongs to). Only includes students in a Hive
-SLC.
+**`students`** — Clean student table: `student_id`, `email`, `first_name`,
+`last_name`, `alias`, and `hive` (the small learning community the student
+belongs to). Only includes students in a Hive SLC. Same schema as
+`raw_students`; filtered during load.
 
 **`prefs`** — Deduplicated preferences, one row per student. Built by joining
 `raw_prefs` to `students` on email and keeping only the most recent submission
@@ -103,19 +150,19 @@ A multi-period workshop spanning periods 1-3 has one row with `period=1` and
 `maximum`, `ideal` (enrollment targets).
 
 **`classes`** — Full class schedule for all students, imported from the school
-information system. One row per student-course enrollment with period, room,
-teacher, and date range. Used to determine which periods each student is
-available for workshops.
+information system. One row per student-course enrollment with `student_id`,
+`course`, `teacher_email`, `period`, `section_id`, `start_date`, and
+`end_date`. Used to determine which periods each student is available for
+workshops.
 
 **`core_classes`** — List of course names that count as "core" classes.
 Students are pulled out of these classes to attend workshops, so the periods
 where a student has a core class are the periods available for workshop
 assignment.
 
-**`not_participating`** — Exceptions: specific course/hive combinations where
-students should *not* be pulled from class. For example, Hive 7 students are
-not pulled from English or History, and Hive 2/4 students are not pulled from
-Math.
+**`not_participating`** — Exceptions: teacher emails whose students should
+*not* be pulled from class for the conference. The `student_periods` view
+left-joins this table to exclude those sections.
 
 ### Views
 
@@ -145,17 +192,17 @@ Each gene is an object:
 ```
 {
   student_id: "12345",
-  periods: { 1: 42, 2: 17, 3: 42, 5: 8, 6: 31 }
+  periods: { 1: 42, 2: 42, 3: 17, 5: 8, 6: 31 }
 }
 ```
 
-The `periods` object maps period numbers to `workshop_id` values. A
-multi-period workshop appears in multiple period slots with the same id (e.g.
-workshop 42 in periods 1 and 3 above would be a duration-2 workshop spanning
-periods 1-2... actually it spans whatever its definition says; the same id
-repeats for each period it occupies). Not every period 1-6 is present — only
-the periods where the student has a core class and is available for workshops
-(from `student_periods`).
+The `periods` object maps period numbers to `workshop_id` values. A multi-period
+workshop appears in multiple period slots with the same id (e.g. workshop 42 in
+periods 1 and 2 above would be a duration-2 workshop spanning periods 1-2; each
+period it occupies). Not every period 1-6 is present — only the periods where
+the student has a core class and is available for workshops (from
+`student_periods`). (They may also be scheduled for field trips during elective
+periods.)
 
 Workshop instances are identified by `workshop_id` (an integer primary key in
 the `workshops` table), not by name. This matters because the same workshop
