@@ -21,6 +21,16 @@ create table if not exists raw_workshops (
   errors TEXT
 );
 
+drop table if exists raw_students;
+create table raw_students (
+  student_id TEXT,
+  first_name TEXT,
+  last_name TEXT,
+  alias TEXT,
+  hive TEXT,
+  email TEXT
+);
+
 drop table if exists students;
 create table  students (
   student_id TEXT,

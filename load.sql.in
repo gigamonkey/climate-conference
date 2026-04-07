@@ -7,7 +7,7 @@
 .mode csv
 .import --skip 1 "__DATA_DIR__/raw_prefs.csv" raw_prefs
 .import --skip 1 "__DATA_DIR__/raw_workshops.csv" raw_workshops
-.import --skip 1 "__DATA_DIR__/students.csv" students
+.import --skip 1 "__DATA_DIR__/raw_students.csv" raw_students
 .import --skip 1 "__DATA_DIR__/classes.csv" classes
 .import --skip 1 "__DATA_DIR__/not_participating.csv" not_participating
 
@@ -16,10 +16,15 @@ update raw_prefs set username = null where username = '';
 update raw_prefs set email = lower(coalesce(username, email));
 
 -- Proper nulls so we can coalesce
-update students set alias = null where alias = '';
+update raw_students set alias = null where alias = '';
+
+-- A few students whose hive is not set in IC
+.read "__DATA_DIR__/hive_fixups.sql"
 
 -- A handful of students where the alias field was used weirdly (to explain pronunciation)
 .read "__DATA_DIR__/alias_fixups.sql"
+
+insert into students select * from raw_students where hive like 'Hive %';
 
 insert into prefs
 with ranked as (
@@ -58,6 +63,8 @@ with recursive split(student_id, item, rest) AS (
 )
 select student_id, item workshop, 1 submitted FROM split;
 
+-- Fix some workshop names from form
+.read "__DATA_DIR__/workshop_fixups.sql"
 
 -- The core classes - used to determine which periods we should schedule each student
 insert into core_classes(course) values('Physics 1 (P)');

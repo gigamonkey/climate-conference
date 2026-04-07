@@ -4,6 +4,12 @@
 
 ## Backlog
 
+- Add Hive to attendance sheets.
+
+- Add "kids on field trips" report. Maybe just a sheet in the spreadsheet.
+
+- Clean up scripts. Some are no longer needed.
+
 ## Done
 
 - Move data out of project dir. (2026-04-02T07:59:41)

@@ -141,6 +141,30 @@ values
   ($timestamp, $username, $lastName, $firstName, $email, $studentId, $hive, $workshops);
 
 
+-- raw_students --------------------------------------------
+
+-- :name rawStudents :all
+select * from raw_students;
+
+-- :name insertRawStudent :insert
+insert into raw_students
+  (student_id, first_name, last_name, alias, hive, email)
+values
+  ($studentId, $firstName, $lastName, $alias, $hive, $email);
+
+-- :name makeRawStudent :insert
+insert into raw_students
+  (student_id, first_name, last_name, alias, hive, email)
+values
+  ($studentId, $firstName, $lastName, $alias, $hive, $email);
+
+-- :name makeRawStudentWithDefaultValues :insert
+insert into raw_students
+  (student_id, first_name, last_name, alias, hive, email)
+values
+  ($studentId, $firstName, $lastName, $alias, $hive, $email);
+
+
 -- raw_workshops -------------------------------------------
 
 -- :name rawWorkshops :all
