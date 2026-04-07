@@ -69,8 +69,8 @@ const main = (database, options) => {
   );
 
   // Student info for output enrichment (student_id -> {email, name})
-  const studentInfo = fromEntries(db.studentInfo().map(({ student_id, email, first_name, last_name }) =>
-    [student_id, { email, name: `${last_name}, ${first_name}` }]
+  const studentInfo = fromEntries(db.studentInfo().map(({ student_id, email, first_name, last_name, hive }) =>
+    [student_id, { email, name: `${last_name}, ${first_name}`, hive }]
   ));
 
   // Map of student_id to periods that need to be assigned

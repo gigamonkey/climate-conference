@@ -1,12 +1,12 @@
 /**
  * Load the "Assignments" sheet and return structured data.
  *
- * The sheet has columns: student_id, name, email, period, workshop, location
+ * The sheet has columns: student_id, name, email, hive, period, workshop, location
  * (one row per student-period assignment).
  *
  * Returns:
- *   students: Map of student_id -> { name, email, periods: [{period, workshop, location}] }
- *   byWorkshop: Map of "workshop|location|period" -> { workshop, period, location, students: [{student_id, name}, ...] }
+ *   students: Map of student_id -> { name, email, hive, periods: [{period, workshop, location}] }
+ *   byWorkshop: Map of "workshop|location|period" -> { workshop, period, location, students: [{student_id, name, hive}, ...] }
  */
 const loadAssignments = () => {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -16,12 +16,12 @@ const loadAssignments = () => {
   const students = {};
   const byWorkshop = {};
 
-  rows.forEach(([student_id, name, email, period, workshop, location]) => {
+  rows.forEach(([student_id, name, email, hive, period, workshop, location]) => {
     if (!student_id) return;
 
     // Build per-student data
     if (!students[student_id]) {
-      students[student_id] = { name, email, periods: [] };
+      students[student_id] = { name, email, hive, periods: [] };
     }
     students[student_id].periods.push({ period, workshop, location });
 
@@ -30,7 +30,7 @@ const loadAssignments = () => {
     if (!byWorkshop[key]) {
       byWorkshop[key] = { workshop, period, location, students: [] };
     }
-    byWorkshop[key].students.push({ student_id, name });
+    byWorkshop[key].students.push({ student_id, name, hive });
   });
 
   // Sort each student's periods
@@ -99,7 +99,7 @@ const makeStudentSchedulesDoc = () => {
   for (let i = 0; i < sorted.length; i++) {
     const student = sorted[i];
 
-    body.appendParagraph(`${student.name} (#${student.student_id})`)
+    body.appendParagraph(`${student.name} (#${student.student_id}) - ${student.hive}`)
       .setHeading(DocumentApp.ParagraphHeading.HEADING1);
 
     const tableData = student.periods.map(({ period, workshop, location }) =>
@@ -168,7 +168,7 @@ const makeAttendanceDoc = () => {
 
     const tableData = [
       ['Name', 'P/T/A'],
-      ...students.map(({ name, student_id }) => [`${name} (#${student_id})`, ''])
+      ...students.map(({ name, student_id, hive }) => [`${name} (#${student_id}) - ${hive}`, ''])
     ];
     const table = body.appendTable(tableData);
     table.setBorderColor('#cccccc');
@@ -212,27 +212,28 @@ const makeAttendanceSpreadsheet = () => {
     let sheet = targetSpreadsheet.insertSheet(tabName);
 
     // Header row
-    sheet.getRange("A1:C1").setValues([['Student ID', 'Name', 'P/T/A']]);
-    sheet.getRange("A1:C1").setFontWeight("bold");
-    sheet.getRange("A1:C1").setBackground("#f3f3f3");
+    sheet.getRange("A1:D1").setValues([['Student ID', 'Name', 'Hive', 'P/T/A']]);
+    sheet.getRange("A1:D1").setFontWeight("bold");
+    sheet.getRange("A1:D1").setBackground("#f3f3f3");
 
     // Student data
     if (students.length > 0) {
-      const dataRange = sheet.getRange(2, 1, students.length, 3);
-      const dataValues = students.map(({ student_id, name }) => [student_id, name, '']);
+      const dataRange = sheet.getRange(2, 1, students.length, 4);
+      const dataValues = students.map(({ student_id, name, hive }) => [student_id, name, hive, '']);
       dataRange.setValues(dataValues);
     }
 
     // Formatting
     sheet.setColumnWidth(1, 100);
     sheet.setColumnWidth(2, 250);
-    sheet.setColumnWidth(3, 100);
+    sheet.setColumnWidth(3, 150);
+    sheet.setColumnWidth(4, 100);
 
-    const fullRange = sheet.getRange(1, 1, students.length + 1, 3);
+    const fullRange = sheet.getRange(1, 1, students.length + 1, 4);
     fullRange.setBorder(true, true, true, true, true, true, '#cccccc', SpreadsheetApp.BorderStyle.SOLID);
 
     sheet.setFrozenRows(1);
-    sheet.autoResizeColumns(1, 3);
+    sheet.autoResizeColumns(1, 4);
   });
 
   targetSpreadsheet.setActiveSheet(targetSpreadsheet.getSheets()[0]);
